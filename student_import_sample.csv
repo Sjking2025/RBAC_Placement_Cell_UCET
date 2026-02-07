@@ -1,0 +1,11 @@
+First Name,Last Name,Email,Phone,Roll No,Batch,Gender,College Code,College Name,Department,Current Semester,CGPA
+John,Doe,john.doe@example.com,9876543210,CSE2024001,2024,male,UCET01,University College of Engineering,CSE,6,8.5
+Jane,Smith,jane.smith@example.com,9876543211,CSE2024002,2024,female,UCET01,University College of Engineering,CSE,6,9.2
+Robert,Johnson,robert.j@example.com,9876543212,ECE2024001,2024,male,UCET01,University College of Engineering,ECE,6,7.8
+Emily,Davis,emily.d@example.com,9876543213,ECE2024002,2024,female,UCET01,University College of Engineering,ECE,6,8.9
+Michael,Brown,michael.b@example.com,9876543214,MECH2024001,2024,male,UCET01,University College of Engineering,MECH,6,7.5
+Sarah,Wilson,sarah.w@example.com,9876543215,MECH2024002,2024,female,UCET01,University College of Engineering,MECH,6,8.1
+David,Miller,david.m@example.com,9876543216,CIVIL2024001,2024,male,UCET01,University College of Engineering,CIVIL,6,7.2
+Jennifer,Taylor,jennifer.t@example.com,9876543217,CIVIL2024002,2024,female,UCET01,University College of Engineering,CIVIL,6,8.4
+James,Anderson,james.a@example.com,9876543218,EEE2024001,2024,male,UCET01,University College of Engineering,EEE,6,7.9
+Lisa,Thomas,lisa.t@example.com,9876543219,EEE2024002,2024,female,UCET01,University College of Engineering,EEE,6,9.0

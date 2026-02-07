@@ -30,6 +30,9 @@ router.get('/:id', studentController.getStudent);
 // Update student profile
 router.put('/:id', validate(updateProfileSchema), studentController.updateStudent);
 
+// Delete student (Admin, Officer)
+router.delete('/:id', authorize('admin', 'dept_officer'), studentController.deleteStudent);
+
 // ==========================================
 // SUB-RESOURCE ROUTES (Current User)
 // ==========================================

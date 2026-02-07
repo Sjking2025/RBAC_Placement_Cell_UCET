@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { studentsApi } from '../../api/studentsApi';
+import api from '../../api/axios';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -9,26 +10,21 @@ import { Badge } from '../../components/ui/Badge';
 import { ExportStudentsButton } from '../../components/ui/ExportButton';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import { EmptyStateNoStudents } from '../../components/ui/EmptyState';
-import {
-  Search,
-  Filter,
-  User,
-  GraduationCap,
-  Mail,
-  Phone,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  Plus,
-  Edit
-} from 'lucide-react';
+import { Select } from '../../components/ui/Select';
+import { DeleteConfirmDialog } from '../../components/ui/ConfirmDialog';
+import AddStudentModal from '../../components/students/AddStudentModal';
 import { formatStatus, getInitials, cn } from '../../utils/helpers';
 import { BATCH_YEARS } from '../../utils/constants';
-import api from '../../api/axios';
-import AddStudentModal from '../../components/students/AddStudentModal';
+import toast from 'react-hot-toast';
+import { 
+  Search, Filter, User, GraduationCap, Mail, Phone, 
+  ChevronLeft, ChevronRight, FileText, Plus, Edit, 
+  Trash2, Download, Loader2 
+} from 'lucide-react';
 
 const Students = () => {
   const { user } = useAuth();
+
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [students, setStudents] = useState([]);
@@ -40,6 +36,11 @@ const Students = () => {
   const [department, setDepartment] = useState(searchParams.get('department') || '');
   const [batch, setBatch] = useState(searchParams.get('batch') || '');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Delete State
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadDepartments();
@@ -109,6 +110,23 @@ const Students = () => {
   };
 
   const totalPages = Math.ceil(pagination.total / pagination.limit);
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteId) return;
+    try {
+      setDeleteLoading(true);
+      await api.delete(`/students/${deleteId}`);
+      toast.success('Student deleted successfully'); // Requires toast import, verifying logic
+      loadStudents(); 
+      setIsDeleteOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Failed to delete student');
+    } finally {
+      setDeleteLoading(false);
+      setDeleteId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -339,22 +357,38 @@ const Students = () => {
                         </Button>
                       )}
                       
-                      {/* Edit Button for Admin/Officer */}
-                      {(user?.role === 'admin' || user?.role === 'dept_officer') && (
-                         <div onClick={(e) => e.preventDefault()}>
+                     {(user?.role === 'admin' || user?.role === 'dept_officer') && (
+                        <div className="flex flex-col gap-2 w-full">
+                          <div onClick={(e) => e.preventDefault()} className="w-full">
                             <AddStudentModal
-                                departments={departments}
-                                onSuccess={loadStudents}
-                                mode="edit"
-                                initialData={student}
-                                trigger={
-                                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                                        <Edit className="h-4 w-4 mr-1" />
-                                        Edit
-                                    </Button>
-                                }
+                              departments={departments}
+                              onSuccess={loadStudents}
+                              mode="edit"
+                              initialData={student}
+                              trigger={
+                                <Button variant="outline" size="sm" className="w-full justify-start">
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Edit
+                                </Button>
+                              }
                             />
-                         </div>
+                          </div>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setDeleteId(student.id);
+                              setIsDeleteOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -389,6 +423,17 @@ const Students = () => {
           </Button>
         </div>
       )}
+
+      <DeleteConfirmDialog
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          setIsDeleteOpen(false);
+          setDeleteId(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        itemName="this student"
+        loading={deleteLoading}
+      />
     </div>
   );
 };

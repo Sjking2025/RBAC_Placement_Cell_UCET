@@ -148,6 +148,27 @@ exports.updateStudent = async (req, res, next) => {
             }
         }
 
+        // Check Department Officer authorization
+        if (req.user.role === 'dept_officer') {
+            const student2 = await prisma.studentProfile.findUnique({
+                where: { id: studentId },
+                select: { department_id: true }
+            });
+
+            const officerProfile = await prisma.userProfile.findUnique({
+                where: { user_id: req.user.id }
+            });
+
+            if (!student2 || !officerProfile || officerProfile.department_id !== student2.department_id) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized to update students from other departments'
+                });
+            }
+        }
+
+        console.log(`Update Student ${studentId} by ${req.user.email} (${req.user.role})`);
+        console.log('Update Data:', req.body);
         const updateData = {};
 
         // Fields allowed for students (Self-update)
@@ -266,6 +287,59 @@ exports.updateStudent = async (req, res, next) => {
             message: 'Profile updated successfully',
             data: student
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Delete student (User and Profile)
+ * @route   DELETE /api/v1/students/:id
+ * @access  Private (Admin, Deut Officer)
+ */
+exports.deleteStudent = async (req, res, next) => {
+    try {
+        const studentId = parseInt(req.params.id);
+        const { role, id: userId } = req.user;
+
+        // 1. Fetch student to get user_id and department_id
+        const student = await prisma.studentProfile.findUnique({
+            where: { id: studentId },
+            include: { user: true }
+        });
+
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found' });
+        }
+
+        // 2. RBAC Check
+        if (role === 'dept_officer') {
+            // Fetch officer's profile to get department
+            const officerProfile = await prisma.userProfile.findUnique({
+                where: { user_id: userId }
+            });
+
+            if (!officerProfile || officerProfile.department_id !== student.department_id) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized to delete students from other departments'
+                });
+            }
+        } else if (role !== 'admin' && role !== 'placement_officer') {
+            // Only Admin, Placement Officer, and Dept Officer (checked above) are allowed
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        // 3. Delete User (Cascades to StudentProfile)
+        await prisma.user.delete({
+            where: { id: student.user_id }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Student deleted successfully'
+        });
+
     } catch (error) {
         next(error);
     }
@@ -713,6 +787,20 @@ exports.createStudent = async (req, res, next) => {
             cgpa
         } = req.body;
 
+        // RBAC: If Dept Officer, enforce departmentId matches their own
+        if (req.user.role === 'dept_officer') {
+            const officerProfile = await prisma.userProfile.findUnique({
+                where: { user_id: req.user.id }
+            });
+
+            if (!officerProfile || officerProfile.department_id !== parseInt(departmentId)) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized to add students to other departments'
+                });
+            }
+        }
+
         // Check if user exists
         const userExists = await prisma.user.findUnique({
             where: { email }
@@ -867,6 +955,21 @@ exports.bulkCreateStudents = async (req, res, next) => {
 
                 if (!deptId) {
                     throw new Error(`Department not found for '${student.department}'`);
+                }
+
+                // RBAC: If Dept Officer, enforce departmentId matches their own
+                if (req.user.role === 'dept_officer') {
+                    // Fetch mostly static profile once ideally, but inside loop ok for safety
+                    // Optimized: req.user.user_profile should be available if middleware populated it? 
+                    // Let's assume we need to fetch or trust req.user populated by auth middleware
+                    // To be safe and consistent with previous patterns:
+                    const officerProfile = await prisma.userProfile.findUnique({
+                        where: { user_id: req.user.id }
+                    });
+
+                    if (!officerProfile || officerProfile.department_id !== deptId) {
+                        throw new Error(`Not authorized to add students to Department ID ${deptId}`);
+                    }
                 }
 
                 // Validate Roll Number Structure: CollegeCode + StartYear(YY) + Seq
