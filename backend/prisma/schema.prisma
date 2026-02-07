@@ -212,6 +212,9 @@ model StudentProfile {
   state               String?    @db.VarChar(100)
   pincode             String?    @db.VarChar(10)
   resume_url          String?    @db.VarChar(500)
+  linkedin_url        String?    @db.VarChar(500)
+  github_url          String?    @db.VarChar(500)
+  portfolio_url       String?    @db.VarChar(500)
   profile_completed   Boolean    @default(false)
   placement_status    String     @default("active") @db.VarChar(50)
   created_at          DateTime   @default(now())
@@ -255,6 +258,7 @@ model StudentProject {
   start_date   DateTime? @db.Date
   end_date     DateTime? @db.Date
   project_url  String?   @db.VarChar(500)
+  github_url   String?   @db.VarChar(500)
   created_at   DateTime  @default(now())
 
   // Relations

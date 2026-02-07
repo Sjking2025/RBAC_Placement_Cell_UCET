@@ -12,7 +12,8 @@ import {
   FolderGit2,
   ExternalLink,
   Calendar,
-  Loader2
+  Loader2,
+  Github
 } from 'lucide-react';
 import { formatDate } from '../../utils/helpers';
 import api from '../../api/axios';
@@ -56,8 +57,13 @@ const ProjectsSection = ({ projects = [], onUpdate }) => {
     setLoading(true);
     try {
       const payload = {
-        ...formData,
-        techStack: formData.techStack.split(',').map(s => s.trim()).filter(Boolean)
+        title: formData.title,
+        description: formData.description,
+        technologies: formData.techStack, // Send as string, backend expects string (Joi)
+        projectUrl: formData.projectUrl,
+        githubUrl: formData.githubUrl,
+        startDate: formData.startDate,
+        endDate: formData.endDate
       };
 
       if (editingId) {
@@ -80,7 +86,7 @@ const ProjectsSection = ({ projects = [], onUpdate }) => {
     setFormData({
       title: project.title || '',
       description: project.description || '',
-      techStack: project.tech_stack?.join(', ') || '',
+      techStack: project.technologies || '',
       projectUrl: project.project_url || '',
       githubUrl: project.github_url || '',
       startDate: project.start_date?.split('T')[0] || '',
@@ -221,11 +227,11 @@ const ProjectsSection = ({ projects = [], onUpdate }) => {
                         {project.description}
                       </p>
                     )}
-                    {project.tech_stack?.length > 0 && (
+                    {project.technologies && (
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {project.tech_stack.map((tech, idx) => (
+                        {project.technologies.split(',').map((tech, idx) => (
                           <Badge key={idx} variant="secondary" className="text-xs">
-                            {tech}
+                            {tech.trim()}
                           </Badge>
                         ))}
                       </div>
@@ -241,6 +247,12 @@ const ProjectsSection = ({ projects = [], onUpdate }) => {
                         <a href={project.project_url} target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-foreground">
                           <ExternalLink className="h-3 w-3 mr-1" />
                           Live Demo
+                        </a>
+                      )}
+                      {project.github_url && (
+                        <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-foreground">
+                          <Github className="h-3 w-3 mr-1" />
+                          GitHub
                         </a>
                       )}
                     </div>

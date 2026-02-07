@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,19 +23,22 @@ import {
   Save,
   Link as LinkIcon,
   Github,
-  Linkedin
+  Linkedin,
+  Trash2
 } from 'lucide-react';
-import { formatDate, cn, getInitials } from '../../utils/helpers';
+import { formatDate, cn, getInitials, getMediaUrl } from '../../utils/helpers';
 import { DEGREE_TYPES } from '../../utils/constants';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import ProjectsSection from '../../components/features/ProjectsSection';
 import CertificationsSection from '../../components/features/CertificationsSection';
 import InternshipsSection from '../../components/features/InternshipsSection';
+import ChangePassword from './ChangePassword';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, 'First name is required'),
   lastName: z.string().min(2, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
   phone: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
@@ -59,6 +62,7 @@ const Profile = () => {
   const [internships, setInternships] = useState([]);
   const [newSkill, setNewSkill] = useState('');
   const [uploadingResume, setUploadingResume] = useState(false);
+  const resumeInputRef = useRef(null);
 
   const {
     register,
@@ -83,6 +87,7 @@ const Profile = () => {
       reset({
         firstName: userData.user_profile?.first_name || '',
         lastName: userData.user_profile?.last_name || '',
+        email: userData.email || '',
         phone: userData.user_profile?.phone || '',
         address: userData.user_profile?.address || '',
         city: userData.user_profile?.city || '',
@@ -96,7 +101,7 @@ const Profile = () => {
       });
 
       if (userData.student_profile?.skills) {
-        setSkills(userData.student_profile.skills.map(s => s.skill_name));
+        setSkills(userData.student_profile.skills); // Store full objects
       }
       if (userData.student_profile?.projects) {
         setProjects(userData.student_profile.projects);
@@ -121,6 +126,7 @@ const Profile = () => {
       await api.put('/auth/profile', {
         firstName: data.firstName,
         lastName: data.lastName,
+        email: data.email,
         phone: data.phone,
         address: data.address,
         city: data.city,
@@ -146,8 +152,9 @@ const Profile = () => {
   const handleAddSkill = async () => {
     if (!newSkill.trim()) return;
     try {
-      await api.post('/students/skills', { skillName: newSkill.trim() });
-      setSkills([...skills, newSkill.trim()]);
+      const response = await api.post('/students/skills', { skillName: newSkill.trim() });
+      // response.data.data contains the new skill object
+      setSkills([...skills, response.data.data]);
       setNewSkill('');
       toast.success('Skill added');
     } catch (error) {
@@ -155,10 +162,10 @@ const Profile = () => {
     }
   };
 
-  const handleRemoveSkill = async (skill) => {
+  const handleRemoveSkill = async (skillId) => {
     try {
-      await api.delete(`/students/skills/${encodeURIComponent(skill)}`);
-      setSkills(skills.filter(s => s !== skill));
+      await api.delete(`/students/skills/${skillId}`);
+      setSkills(skills.filter(s => s.id !== skillId));
       toast.success('Skill removed');
     } catch (error) {
       toast.error('Failed to remove skill');
@@ -183,6 +190,17 @@ const Profile = () => {
       toast.error('Failed to upload resume');
     } finally {
       setUploadingResume(false);
+    }
+  };
+
+  const handleRemoveResume = async () => {
+    if (!confirm('Are you sure you want to remove your resume?')) return;
+    try {
+      await api.delete('/students/resume');
+      toast.success('Resume removed successfully');
+      loadProfile();
+    } catch (error) {
+      toast.error('Failed to remove resume');
     }
   };
 
@@ -240,109 +258,120 @@ const Profile = () => {
         </CardContent>
       </Card>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Personal Information */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <User className="h-5 w-5 mr-2" />
-              Personal Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" {...register('firstName')} error={errors.firstName} />
-              {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" {...register('lastName')} error={errors.lastName} />
-              {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" type="tel" {...register('phone')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Input id="address" {...register('address')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
-              <Input id="city" {...register('city')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="state">State</Label>
-              <Input id="state" {...register('state')} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Academic Information (Students only) */}
-        {isStudent() && (
-          <Card className="mb-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 md:col-span-2">
+          {/* Personal Information */}
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <GraduationCap className="h-5 w-5 mr-2" />
-                Academic Information
+                <User className="h-5 w-5 mr-2" />
+                Personal Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-3">
+            <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="cgpa">CGPA</Label>
-                <Input id="cgpa" type="number" step="0.01" min="0" max="10" {...register('cgpa')} />
+                <Label htmlFor="firstName">First Name</Label>
+                <Input id="firstName" {...register('firstName')} error={errors.firstName} />
+                {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="tenthPercentage">10th Percentage</Label>
-                <Input id="tenthPercentage" type="number" step="0.01" min="0" max="100" {...register('tenthPercentage')} />
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input id="lastName" {...register('lastName')} error={errors.lastName} />
+                {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input id="email" type="email" {...register('email')} />
+                <p className="text-xs text-muted-foreground">Changing email may require re-verification.</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="twelfthPercentage">12th Percentage</Label>
-                <Input id="twelfthPercentage" type="number" step="0.01" min="0" max="100" {...register('twelfthPercentage')} />
+                <Label htmlFor="phone">Phone</Label>
+                <Input id="phone" type="tel" {...register('phone')} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">Address</Label>
+                <Input id="address" {...register('address')} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <Input id="city" {...register('city')} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state">State</Label>
+                <Input id="state" {...register('state')} />
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Social Links (Students only) */}
-        {isStudent() && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <LinkIcon className="h-5 w-5 mr-2" />
-                Profile Links
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="linkedinUrl" className="flex items-center">
-                  <Linkedin className="h-4 w-4 mr-1" /> LinkedIn
-                </Label>
-                <Input id="linkedinUrl" type="url" placeholder="https://linkedin.com/in/..." {...register('linkedinUrl')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="githubUrl" className="flex items-center">
-                  <Github className="h-4 w-4 mr-1" /> GitHub
-                </Label>
-                <Input id="githubUrl" type="url" placeholder="https://github.com/..." {...register('githubUrl')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="portfolioUrl">Portfolio</Label>
-                <Input id="portfolioUrl" type="url" placeholder="https://your-portfolio.com" {...register('portfolioUrl')} />
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          {/* Academic Information (Students only) */}
+          {isStudent() && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <GraduationCap className="h-5 w-5 mr-2" />
+                  Academic Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="cgpa">CGPA</Label>
+                  <Input id="cgpa" type="number" step="0.01" min="0" max="10" {...register('cgpa')} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tenthPercentage">10th Percentage</Label>
+                  <Input id="tenthPercentage" type="number" step="0.01" min="0" max="100" {...register('tenthPercentage')} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="twelfthPercentage">12th Percentage</Label>
+                  <Input id="twelfthPercentage" type="number" step="0.01" min="0" max="100" {...register('twelfthPercentage')} />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button type="submit" loading={saving} disabled={!isDirty}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
-        </div>
-      </form>
+          {/* Social Links (Students only) */}
+          {isStudent() && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <LinkIcon className="h-5 w-5 mr-2" />
+                  Profile Links
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="linkedinUrl" className="flex items-center">
+                    <Linkedin className="h-4 w-4 mr-1" /> LinkedIn
+                  </Label>
+                  <Input id="linkedinUrl" type="url" placeholder="https://linkedin.com/in/..." {...register('linkedinUrl')} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="githubUrl" className="flex items-center">
+                    <Github className="h-4 w-4 mr-1" /> GitHub
+                  </Label>
+                  <Input id="githubUrl" type="url" placeholder="https://github.com/..." {...register('githubUrl')} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="portfolioUrl">Portfolio</Label>
+                  <Input id="portfolioUrl" type="url" placeholder="https://your-portfolio.com" {...register('portfolioUrl')} />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Save Button */}
+          <div className="flex justify-end">
+            <Button type="submit" loading={saving} disabled={!isDirty}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </div>
+
+      <div className="mb-6">
+        <ChangePassword />
+      </div>
 
       {/* Skills Section (Students only) */}
       {isStudent() && (
@@ -357,11 +386,11 @@ const Profile = () => {
           <CardContent>
             <div className="flex flex-wrap gap-2 mb-4">
               {skills.map((skill) => (
-                <Badge key={skill} variant="secondary" className="py-1.5 px-3">
-                  {skill}
+                <Badge key={skill.id} variant="secondary" className="py-1.5 px-3">
+                  {skill.skill_name}
                   <button
                     type="button"
-                    onClick={() => handleRemoveSkill(skill)}
+                    onClick={() => handleRemoveSkill(skill.id)}
                     className="ml-2 hover:text-destructive"
                   >
                     <X className="h-3 w-3" />
@@ -410,28 +439,46 @@ const Profile = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <a href={profile.student_profile.resume_url} target="_blank" rel="noopener noreferrer">
+                  <a href={getMediaUrl(profile.student_profile.resume_url)} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm">View</Button>
                   </a>
-                  <label>
-                    <Button variant="outline" size="sm" asChild>
-                      <span>
-                        <Upload className="h-4 w-4 mr-1" />
-                        Replace
-                      </span>
-                    </Button>
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      className="hidden"
-                      onChange={handleResumeUpload}
-                      disabled={uploadingResume}
-                    />
-                  </label>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    type="button" 
+                    className="cursor-pointer"
+                    onClick={() => resumeInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    Replace
+                  </Button>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={handleResumeUpload}
+                    disabled={uploadingResume}
+                    ref={resumeInputRef}
+                  />
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    type="button" 
+                    className="text-destructive hover:text-destructive"
+                    onClick={handleRemoveResume}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Remove
+                  </Button>
                 </div>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+              <div 
+                className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => resumeInputRef.current?.click()}
+              >
                 {uploadingResume ? (
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 ) : (
@@ -447,8 +494,9 @@ const Profile = () => {
                   className="hidden"
                   onChange={handleResumeUpload}
                   disabled={uploadingResume}
+                  ref={resumeInputRef}
                 />
-              </label>
+              </div>
             )}
           </CardContent>
         </Card>

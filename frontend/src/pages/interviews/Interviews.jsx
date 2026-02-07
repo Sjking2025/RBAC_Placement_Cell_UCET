@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -19,6 +20,7 @@ import { formatDate, formatStatus, cn } from '../../utils/helpers';
 import api from '../../api/axios';
 
 const Interviews = () => {
+  const navigate = useNavigate();
   const { isStudent, isCoordinator } = useAuth();
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,10 +33,7 @@ const Interviews = () => {
   const loadInterviews = async () => {
     setLoading(true);
     try {
-      const params = {};
-      if (view === 'upcoming') {
-        params.date = new Date().toISOString().split('T')[0];
-      }
+      const params = { view };
       const response = await api.get('/interviews', { params });
       setInterviews(response.data.data || []);
     } catch (error) {
@@ -80,7 +79,7 @@ const Interviews = () => {
           </p>
         </div>
         {isCoordinator() && (
-          <Button>
+          <Button onClick={() => navigate('/interviews/schedule')}>
             <Plus className="h-4 w-4 mr-2" />
             Schedule Interview
           </Button>

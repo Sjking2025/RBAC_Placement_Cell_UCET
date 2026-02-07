@@ -170,5 +170,21 @@ export function getRelativeTime(date) {
     if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
     if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
     if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     return 'Just now';
+}
+
+/**
+ * Get full media URL from relative path
+ */
+export function getMediaUrl(path) {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+
+    // Get base URL from API URL (remove /api/v1)
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+    const baseUrl = apiUrl.replace('/api/v1', '');
+
+    return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 }

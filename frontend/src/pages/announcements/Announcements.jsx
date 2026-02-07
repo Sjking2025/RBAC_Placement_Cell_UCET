@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -18,6 +19,7 @@ import { formatDate, getRelativeTime, cn } from '../../utils/helpers';
 import api from '../../api/axios';
 
 const Announcements = () => {
+  const navigate = useNavigate();
   const { isCoordinator } = useAuth();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ const Announcements = () => {
           </p>
         </div>
         {isCoordinator() && (
-          <Button>
+          <Button onClick={() => navigate('/announcements/new')}>
             <Plus className="h-4 w-4 mr-2" />
             New Announcement
           </Button>
