@@ -6,6 +6,9 @@ import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
+import { ExportStudentsButton } from '../../components/ui/ExportButton';
+import { SkeletonTable } from '../../components/ui/Skeleton';
+import { EmptyStateNoStudents } from '../../components/ui/EmptyState';
 import {
   Search,
   Filter,
@@ -15,12 +18,10 @@ import {
   Phone,
   ChevronLeft,
   ChevronRight,
-  Loader2,
-  FileText,
-  Download
+  FileText
 } from 'lucide-react';
 import { formatStatus, getInitials, cn } from '../../utils/helpers';
-import { DEGREE_TYPES, BATCH_YEARS } from '../../utils/constants';
+import { BATCH_YEARS } from '../../utils/constants';
 import api from '../../api/axios';
 
 const Students = () => {
@@ -116,10 +117,9 @@ const Students = () => {
             Manage and view student profiles
           </p>
         </div>
-        <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Export List
-        </Button>
+        <ExportStudentsButton 
+          params={{ departmentId: department, batchYear: batch }}
+        />
       </div>
 
       {/* Search and Filters */}
@@ -201,17 +201,18 @@ const Students = () => {
 
       {/* Students List */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <SkeletonTable rows={5} cols={4} />
       ) : students.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
-            <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">No students found</h3>
-            <p className="text-muted-foreground">
-              Try adjusting your search or filters
-            </p>
+          <CardContent className="py-0">
+            <EmptyStateNoStudents 
+              onAction={() => {
+                setSearch('');
+                setDepartment('');
+                setBatch('');
+                setSearchParams(new URLSearchParams());
+              }}
+            />
           </CardContent>
         </Card>
       ) : (

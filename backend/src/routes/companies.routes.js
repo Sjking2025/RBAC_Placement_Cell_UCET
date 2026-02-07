@@ -9,11 +9,11 @@ const { companySchema, companyContactSchema, updateStatusSchema } = require('../
 // All routes require authentication
 router.use(protect);
 
-// Get all companies
-router.get('/', companyController.getCompanies);
+// Get all companies (Admin, Officer, Coordinator only - NOT students)
+router.get('/', authorize('admin', 'dept_officer', 'coordinator'), companyController.getCompanies);
 
-// Get single company
-router.get('/:id', companyController.getCompany);
+// Get single company (Admin, Officer, Coordinator only - NOT students)
+router.get('/:id', authorize('admin', 'dept_officer', 'coordinator'), companyController.getCompany);
 
 // Create company (Admin, Officer, Coordinator)
 router.post('/',

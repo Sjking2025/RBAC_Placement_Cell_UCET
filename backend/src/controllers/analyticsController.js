@@ -21,6 +21,61 @@ exports.getOverview = async (req, res, next) => {
 };
 
 /**
+ * @desc    Get all departments statistics
+ * @route   GET /api/v1/analytics/departments
+ * @access  Private (Admin, Officer)
+ */
+exports.getAllDepartmentStats = async (req, res, next) => {
+    try {
+        const prisma = require('../config/database');
+
+        // Get all departments with their stats
+        const departments = await prisma.department.findMany({
+            include: {
+                student_profiles: {
+                    select: {
+                        id: true,
+                        placement_status: true
+                    }
+                },
+                _count: {
+                    select: {
+                        student_profiles: true,
+                        user_profiles: true
+                    }
+                }
+            }
+        });
+
+        // Calculate stats for each department
+        const departmentStats = departments.map(dept => {
+            const totalStudents = dept._count.student_profiles;
+            const placedStudents = dept.student_profiles.filter(s => s.placement_status === 'placed').length;
+            const placementRate = totalStudents > 0
+                ? ((placedStudents / totalStudents) * 100).toFixed(1)
+                : 0;
+
+            return {
+                id: dept.id,
+                name: dept.name,
+                code: dept.code,
+                totalStudents,
+                placedStudents,
+                placementRate: parseFloat(placementRate),
+                staffCount: dept._count.user_profiles
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: departmentStats
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * @desc    Get department statistics
  * @route   GET /api/v1/analytics/department/:id
  * @access  Private

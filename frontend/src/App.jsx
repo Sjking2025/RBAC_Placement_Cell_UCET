@@ -5,18 +5,29 @@ import Layout from './components/layout/Layout';
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 
 // Main Pages
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/jobs/Jobs';
 import JobDetails from './pages/jobs/JobDetails';
+import CreateJob from './pages/jobs/CreateJob';
 import Companies from './pages/companies/Companies';
+import CompanyDetails from './pages/companies/CompanyDetails';
+import CreateCompany from './pages/companies/CreateCompany';
 import Students from './pages/students/Students';
+import StudentDetails from './pages/students/StudentDetails';
+import Users from './pages/users/Users';
+import CreateUser from './pages/users/CreateUser';
+import UserEdit from './pages/users/UserEdit';
 import Applications from './pages/applications/Applications';
+import MyApplications from './pages/applications/MyApplications';
 import Interviews from './pages/interviews/Interviews';
 import Announcements from './pages/announcements/Announcements';
 import Analytics from './pages/analytics/Analytics';
 import Profile from './pages/profile/Profile';
+import ProfileSetup from './pages/profile/ProfileSetup';
 import Settings from './pages/settings/Settings';
 
 // Protected Route Component
@@ -73,6 +84,22 @@ function App() {
           </PublicRoute>
         }
       />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <PublicRoute>
+            <ResetPassword />
+          </PublicRoute>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
@@ -88,6 +115,15 @@ function App() {
         
         {/* Jobs */}
         <Route path="jobs" element={<Jobs />} />
+        {/* IMPORTANT: /jobs/new must come BEFORE /jobs/:id */}
+        <Route 
+          path="jobs/new" 
+          element={
+            <ProtectedRoute roles={['admin', 'dept_officer', 'coordinator']}>
+              <CreateJob />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="jobs/:id" element={<JobDetails />} />
         
         {/* Companies - Admin/Officer/Coordinator */}
@@ -99,7 +135,23 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        
+        {/* IMPORTANT: /companies/new must come BEFORE /companies/:id */}
+        <Route 
+          path="companies/new" 
+          element={
+            <ProtectedRoute roles={['admin', 'dept_officer']}>
+              <CreateCompany />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="companies/:id" 
+          element={
+            <ProtectedRoute roles={['admin', 'dept_officer', 'coordinator']}>
+              <CompanyDetails />
+            </ProtectedRoute>
+          } 
+        />
         {/* Students - Admin/Officer/Coordinator */}
         <Route 
           path="students" 
@@ -109,7 +161,39 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        
+        <Route 
+          path="students/:id" 
+          element={
+            <ProtectedRoute roles={['admin', 'dept_officer', 'coordinator']}>
+              <StudentDetails />
+            </ProtectedRoute>
+          } 
+        />
+        {/* Users - Admin only */}
+        <Route 
+          path="users" 
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <Users />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="users/create" 
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <CreateUser />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="users/:id/edit" 
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <UserEdit />
+            </ProtectedRoute>
+          } 
+        />
         {/* Applications (Student view) */}
         <Route 
           path="applications" 
@@ -119,7 +203,14 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        
+        <Route 
+          path="my-applications" 
+          element={
+            <ProtectedRoute roles={['student']}>
+              <MyApplications />
+            </ProtectedRoute>
+          } 
+        />
         {/* Interviews */}
         <Route path="interviews" element={<Interviews />} />
         
@@ -138,6 +229,7 @@ function App() {
         
         {/* Profile */}
         <Route path="profile" element={<Profile />} />
+        <Route path="profile/setup" element={<ProfileSetup />} />
         
         {/* Settings */}
         <Route path="settings" element={<Settings />} />

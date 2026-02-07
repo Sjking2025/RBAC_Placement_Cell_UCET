@@ -20,6 +20,7 @@ const interviewRoutes = require('./routes/interviews.routes');
 const announcementRoutes = require('./routes/announcements.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const exportRoutes = require('./routes/export.routes');
+const notificationRoutes = require('./routes/notifications.routes');
 
 const app = express();
 
@@ -55,10 +56,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate limiting
+// Rate limiting (relaxed for development)
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
+    max: process.env.NODE_ENV === 'development'
+        ? 1000  // 1000 requests per 15 min in development
+        : (parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100)
 });
 app.use('/api', limiter);
 
@@ -102,6 +105,7 @@ app.use(`/api/${API_VERSION}/interviews`, interviewRoutes);
 app.use(`/api/${API_VERSION}/announcements`, announcementRoutes);
 app.use(`/api/${API_VERSION}/analytics`, analyticsRoutes);
 app.use(`/api/${API_VERSION}/export`, exportRoutes);
+app.use(`/api/${API_VERSION}/notifications`, notificationRoutes);
 
 // 404 handler
 app.use((req, res) => {

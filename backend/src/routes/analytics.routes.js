@@ -12,7 +12,10 @@ router.get('/me', authorize('student'), analyticsController.getMyStats);
 // Overall statistics (Admin, Officer)
 router.get('/overview', authorize('admin', 'dept_officer'), analyticsController.getOverview);
 
-// Department statistics
+// All departments statistics (Admin, Officer)
+router.get('/departments', authorize('admin', 'dept_officer'), analyticsController.getAllDepartmentStats);
+
+// Single department statistics
 router.get('/department/:id', analyticsController.getDepartmentStats);
 
 // Company statistics (Admin, Officer)

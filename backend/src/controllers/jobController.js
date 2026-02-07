@@ -15,23 +15,13 @@ exports.getJobs = async (req, res, next) => {
 
         // Apply filters based on role
         if (req.user.role === 'student') {
-            // Students see only active jobs they're eligible for
+            // Students see only active jobs
             where.status = 'active';
-            const student = req.user.student_profile;
-
-            if (student) {
-                where.AND = [
-                    { OR: [{ required_cgpa: { lte: student.cgpa } }, { required_cgpa: null }] },
-                    { OR: [{ allowed_backlogs: { gte: student.active_backlogs } }, { allowed_backlogs: null }] },
-                    { OR: [{ eligible_departments: { has: student.department_id } }, { eligible_departments: { isEmpty: true } }] },
-                    { OR: [{ eligible_batches: { has: student.batch_year } }, { eligible_batches: { isEmpty: true } }] }
-                ];
-            }
+            // Note: Eligibility filtering can be done client-side or in a separate check
+            // For now, just show all active jobs to students
         } else if (req.user.role === 'dept_officer' || req.user.role === 'coordinator') {
-            // Officers and coordinators see jobs for their department
-            if (req.user.user_profile?.department_id) {
-                where.eligible_departments = { has: req.user.user_profile.department_id };
-            }
+            // Officers and coordinators see all jobs (no department restriction for simplicity)
+            // Can be enhanced to filter by department if needed
         }
 
         // Additional filters

@@ -101,3 +101,33 @@ export const PROFICIENCY_LEVELS = [
     { value: 'advanced', label: 'Advanced' },
     { value: 'expert', label: 'Expert' }
 ];
+
+export const INDUSTRY_TYPES = [
+    { value: 'technology', label: 'Technology' },
+    { value: 'finance', label: 'Finance & Banking' },
+    { value: 'consulting', label: 'Consulting' },
+    { value: 'healthcare', label: 'Healthcare' },
+    { value: 'manufacturing', label: 'Manufacturing' },
+    { value: 'retail', label: 'Retail & E-commerce' },
+    { value: 'education', label: 'Education' },
+    { value: 'telecom', label: 'Telecommunications' },
+    { value: 'energy', label: 'Energy & Utilities' },
+    { value: 'automotive', label: 'Automotive' },
+    { value: 'media', label: 'Media & Entertainment' },
+    { value: 'real_estate', label: 'Real Estate' },
+    { value: 'hospitality', label: 'Hospitality' },
+    { value: 'logistics', label: 'Logistics & Supply Chain' },
+    { value: 'government', label: 'Government' },
+    { value: 'other', label: 'Other' }
+];
+
+export const COMPANY_SIZES = [
+    { value: '1-10', label: '1-10 employees' },
+    { value: '11-50', label: '11-50 employees' },
+    { value: '51-200', label: '51-200 employees' },
+    { value: '201-500', label: '201-500 employees' },
+    { value: '501-1000', label: '501-1000 employees' },
+    { value: '1001-5000', label: '1001-5000 employees' },
+    { value: '5001-10000', label: '5001-10000 employees' },
+    { value: '10000+', label: '10000+ employees' }
+];

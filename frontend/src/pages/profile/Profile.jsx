@@ -29,6 +29,9 @@ import { formatDate, cn, getInitials } from '../../utils/helpers';
 import { DEGREE_TYPES } from '../../utils/constants';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import ProjectsSection from '../../components/features/ProjectsSection';
+import CertificationsSection from '../../components/features/CertificationsSection';
+import InternshipsSection from '../../components/features/InternshipsSection';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, 'First name is required'),
@@ -51,6 +54,9 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
   const [skills, setSkills] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [internships, setInternships] = useState([]);
   const [newSkill, setNewSkill] = useState('');
   const [uploadingResume, setUploadingResume] = useState(false);
 
@@ -91,6 +97,15 @@ const Profile = () => {
 
       if (userData.student_profile?.skills) {
         setSkills(userData.student_profile.skills.map(s => s.skill_name));
+      }
+      if (userData.student_profile?.projects) {
+        setProjects(userData.student_profile.projects);
+      }
+      if (userData.student_profile?.certifications) {
+        setCertifications(userData.student_profile.certifications);
+      }
+      if (userData.student_profile?.internships) {
+        setInternships(userData.student_profile.internships);
       }
     } catch (error) {
       console.error('Failed to load profile:', error);
@@ -437,6 +452,21 @@ const Profile = () => {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Projects Section (Students only) */}
+      {isStudent() && (
+        <ProjectsSection projects={projects} onUpdate={loadProfile} />
+      )}
+
+      {/* Certifications Section (Students only) */}
+      {isStudent() && (
+        <CertificationsSection certifications={certifications} onUpdate={loadProfile} />
+      )}
+
+      {/* Internships Section (Students only) */}
+      {isStudent() && (
+        <InternshipsSection internships={internships} onUpdate={loadProfile} />
       )}
     </div>
   );

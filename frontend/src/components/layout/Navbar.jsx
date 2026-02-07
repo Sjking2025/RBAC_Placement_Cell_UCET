@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import NotificationCenter from '../features/NotificationCenter';
 import { 
   Menu, 
   X, 
@@ -84,10 +85,7 @@ const Navbar = () => {
           {/* Right side */}
           <div className="flex items-center space-x-4">
             {/* Notifications */}
-            <button className="relative p-2 rounded-md hover:bg-muted">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <NotificationCenter />
 
             {/* Profile Dropdown */}
             <div className="relative">

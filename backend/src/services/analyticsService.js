@@ -22,7 +22,7 @@ exports.getOverallStats = async (academicYear) => {
             where: { status: 'active' }
         });
         const pendingApplications = await prisma.application.count({
-            where: { status: 'pending' }
+            where: { status: 'submitted' }
         });
         const totalOffers = await prisma.placementRecord.count({
             where: { offer_status: 'accepted' }
