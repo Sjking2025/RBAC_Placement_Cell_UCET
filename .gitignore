@@ -1,0 +1,27 @@
+# Systems
+.DS_Store
+Thumbs.db
+*.log
+
+# Dependencies
+node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build
+dist/
+build/
+coverage/
+
+# IDEs
+.vscode/
+.idea/
+
+# Documentation - Ignore all MD files except README
+*.md
+!README.md
