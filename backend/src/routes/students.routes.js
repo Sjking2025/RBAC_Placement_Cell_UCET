@@ -18,6 +18,12 @@ router.use(protect);
 // Student list (Admin, Officer, Coordinator)
 router.get('/', authorize('admin', 'dept_officer', 'coordinator'), studentController.getStudents);
 
+// Create Student (Admin, Officer)
+router.post('/', authorize('admin', 'dept_officer'), studentController.createStudent);
+
+// Bulk Create Students (Admin, Officer)
+router.post('/bulk', authorize('admin', 'dept_officer'), studentController.bulkCreateStudents);
+
 // Get student by ID
 router.get('/:id', studentController.getStudent);
 

@@ -18,11 +18,14 @@ import {
   Phone,
   ChevronLeft,
   ChevronRight,
-  FileText
+  FileText,
+  Plus,
+  Edit
 } from 'lucide-react';
 import { formatStatus, getInitials, cn } from '../../utils/helpers';
 import { BATCH_YEARS } from '../../utils/constants';
 import api from '../../api/axios';
+import AddStudentModal from '../../components/students/AddStudentModal';
 
 const Students = () => {
   const { user } = useAuth();
@@ -117,9 +120,23 @@ const Students = () => {
             Manage and view student profiles
           </p>
         </div>
-        <ExportStudentsButton 
-          params={{ departmentId: department, batchYear: batch }}
-        />
+        <div className="flex gap-2">
+            {(user?.role === 'admin' || user?.role === 'dept_officer') && (
+                <AddStudentModal 
+                    departments={departments}
+                    onSuccess={loadStudents}
+                    trigger={
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Student
+                        </Button>
+                    }
+                />
+            )}
+            <ExportStudentsButton 
+              params={{ departmentId: department, batchYear: batch }}
+            />
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -148,40 +165,70 @@ const Students = () => {
           </div>
 
           {showFilters && (
-            <div className="mt-4 pt-4 border-t grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Department</label>
-                <select
-                  value={department}
-                  onChange={(e) => {
-                    setDepartment(e.target.value);
-                    handleFilterChange('department', e.target.value);
-                  }}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">All Departments</option>
-                  {departments.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
+            <div className="mt-4 pt-4 border-t">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Year of Study Filter - New */}
+                <div>
+                   <label className="text-sm font-medium mb-1 block">Year of Study</label>
+                   <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      onChange={(e) => {
+                          const year = parseInt(e.target.value);
+                          if (year) {
+                              const currentYear = new Date().getFullYear();
+                              // Logic: IV Year (4) -> Batch 2026 (if current is 2026)
+                              // Batch = CurrentYear + (4 - Year)
+                              // If Year 4 (Final), Batch = 2026 + 0 = 2026
+                              // If Year 1 (First), Batch = 2026 + 3 = 2029
+                              const targetBatch = currentYear + (4 - year);
+                              handleFilterChange('batch', targetBatch.toString());
+                          } else {
+                              handleFilterChange('batch', '');
+                          }
+                      }}
+                      value={batch ? (4 - (parseInt(batch) - new Date().getFullYear())).toString() : ''}
+                   >
+                      <option value="">All Years</option>
+                      <option value="4">IV Year (Final)</option>
+                      <option value="3">III Year</option>
+                      <option value="2">II Year</option>
+                      <option value="1">I Year</option>
+                   </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Department</label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={searchParams.get('department') || ''}
+                    onChange={(e) => handleFilterChange('department', e.target.value)}
+                  >
+                    <option value="">All Departments</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name} ({dept.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Batch Year (Direct)</label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={searchParams.get('batch') || ''}
+                     onChange={(e) => handleFilterChange('batch', e.target.value)}
+                  >
+                    <option value="">All Batches</option>
+                    {BATCH_YEARS.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Batch Year</label>
-                <select
-                  value={batch}
-                  onChange={(e) => {
-                    setBatch(e.target.value);
-                    handleFilterChange('batch', e.target.value);
-                  }}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">All Batches</option>
-                  {BATCH_YEARS.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-end">
+              <div className="flex items-end mt-4">
                 <Button 
                   variant="ghost" 
                   onClick={() => {
@@ -276,20 +323,40 @@ const Students = () => {
                       )}
                     </div>
 
-                    {/* Resume */}
-                    {student.resume_url && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.open(student.resume_url, '_blank');
-                        }}
-                      >
-                        <FileText className="h-4 w-4 mr-1" />
-                        Resume
-                      </Button>
-                    )}
+                    {/* Actions */}
+                    <div className="flex flex-col gap-2 ml-4">
+                      {student.resume_url && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open(student.resume_url, '_blank');
+                          }}
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          Resume
+                        </Button>
+                      )}
+                      
+                      {/* Edit Button for Admin/Officer */}
+                      {(user?.role === 'admin' || user?.role === 'dept_officer') && (
+                         <div onClick={(e) => e.preventDefault()}>
+                            <AddStudentModal
+                                departments={departments}
+                                onSuccess={loadStudents}
+                                mode="edit"
+                                initialData={student}
+                                trigger={
+                                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                                        <Edit className="h-4 w-4 mr-1" />
+                                        Edit
+                                    </Button>
+                                }
+                            />
+                         </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

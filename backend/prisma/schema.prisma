@@ -29,6 +29,7 @@ enum UserStatus {
 
 enum DegreeType {
   BTech
+  BE
   MTech
   MBA
   MCA
@@ -207,6 +208,8 @@ model StudentProfile {
   active_backlogs     Int        @default(0)
   date_of_birth       DateTime?  @db.Date
   gender              String?    @db.VarChar(20)
+  college_code        String?    @db.VarChar(50)
+  college_name        String?    @db.VarChar(255)
   address             String?    @db.Text
   city                String?    @db.VarChar(100)
   state               String?    @db.VarChar(100)
