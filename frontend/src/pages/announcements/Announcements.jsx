@@ -60,10 +60,10 @@ const Announcements = () => {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'critical': return 'border-l-red-500 bg-red-50 dark:bg-red-900/10';
-      case 'high': return 'border-l-orange-500 bg-orange-50 dark:bg-orange-900/10';
-      case 'medium': return 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/10';
-      default: return 'border-l-green-500 bg-green-50 dark:bg-green-900/10';
+      case 'critical': return 'border-l-red-500 bg-red-500/5';
+      case 'high': return 'border-l-orange-500 bg-orange-500/5';
+      case 'medium': return 'border-l-sky-500 bg-sky-500/5';
+      default: return 'border-l-emerald-500 bg-emerald-500/5';
     }
   };
 
@@ -80,10 +80,10 @@ const Announcements = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-stagger-in">
         <div>
-          <h1 className="text-3xl font-bold">Announcements</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Announcements</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Stay updated with the latest news and updates
           </p>
         </div>
@@ -117,8 +117,8 @@ const Announcements = () => {
       ) : announcements.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">No announcements</h3>
+            <Bell className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+            <h3 className="font-display text-base font-medium">No announcements</h3>
             <p className="text-muted-foreground">
               There are no announcements to display
             </p>
@@ -134,7 +134,7 @@ const Announcements = () => {
                 getPriorityColor(announcement.priority)
               )}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-5">
                 <div className="flex items-start gap-4">
                   {/* Priority Icon */}
                   <div className="flex-shrink-0 mt-1">
@@ -146,7 +146,7 @@ const Announcements = () => {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{announcement.title}</h3>
+                          <h3 className="font-display font-semibold text-sm">{announcement.title}</h3>
                           {announcement.is_pinned && (
                             <Pin className="h-4 w-4 text-primary" />
                           )}
@@ -195,7 +195,7 @@ const Announcements = () => {
                     )}
 
                     {/* Footer */}
-                    <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm text-muted-foreground">
+                    <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
                       <span>
                         Posted by: {announcement.creator?.user_profile?.first_name || 'Admin'}
                       </span>

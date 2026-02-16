@@ -59,7 +59,7 @@ const ProfileSetup = () => {
     <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold">Complete Your Profile</h1>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Complete Your Profile</h1>
           <p className="text-muted-foreground mt-2">
             Let's set up your profile to help you find the best opportunities
           </p>

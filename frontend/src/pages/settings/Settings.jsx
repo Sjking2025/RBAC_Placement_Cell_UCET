@@ -128,10 +128,10 @@ const Settings = () => {
   const ThemeOption = ({ value, label, icon: Icon, current }) => (
     <button
       onClick={() => handleThemeChange(value)}
-      className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all ${
+      className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 ${
         current === value 
-          ? 'border-primary bg-primary/5' 
-          : 'border-muted hover:border-primary/50'
+          ? 'border-primary bg-primary/5 shadow-glow-teal' 
+          : 'border-border/50 hover:border-primary/30'
       }`}
     >
       <Icon className={`h-6 w-6 mb-2 ${current === value ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -166,12 +166,12 @@ const Settings = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold flex items-center">
-          <SettingsIcon className="h-8 w-8 mr-3" />
+      <div className="animate-stagger-in">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold flex items-center">
+          <SettingsIcon className="h-7 w-7 mr-3 text-muted-foreground" />
           Settings
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Manage your account settings and preferences
         </p>
       </div>
@@ -184,10 +184,10 @@ const Settings = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-muted'
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'hover:bg-muted/50 text-muted-foreground'
                 }`}
               >
                 <tab.icon className="h-4 w-4" />
@@ -207,12 +207,12 @@ const Settings = () => {
                 <CardDescription>View your account details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border border-border/50">
+                  <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground font-display text-lg font-bold">
                     {user?.user_profile?.first_name?.[0]}{user?.user_profile?.last_name?.[0]}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">
+                    <h3 className="font-display font-semibold text-base">
                       {user?.user_profile?.first_name} {user?.user_profile?.last_name}
                     </h3>
                     <p className="text-muted-foreground">{user?.email}</p>
@@ -250,7 +250,7 @@ const Settings = () => {
                 <CardDescription>Configure how you want to be notified</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1 divide-y">
+                <div className="space-y-1 divide-y divide-border/50">
                   <NotificationToggle
                     label="Job Posting Alerts"
                     description="Get notified when new jobs are posted"
@@ -405,7 +405,7 @@ const Settings = () => {
                     </div>
                     <div>
                       <Label>Season Status</Label>
-                      <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm mt-1">
+                      <select className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm mt-1 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30">
                         <option>Active</option>
                         <option>Inactive</option>
                       </select>

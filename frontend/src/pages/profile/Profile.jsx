@@ -216,7 +216,7 @@ const Profile = () => {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Profile</h1>
+        <h1 className="font-display text-2xl sm:text-3xl font-bold">Profile</h1>
         <p className="text-muted-foreground">
           Manage your personal information and settings
         </p>
@@ -226,7 +226,7 @@ const Profile = () => {
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold">
+            <div className="w-20 h-20 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground font-display text-2xl font-bold">
               {getInitials(profile?.user_profile?.first_name, profile?.user_profile?.last_name)}
             </div>
             <div className="text-center sm:text-left flex-1">
@@ -248,7 +248,7 @@ const Profile = () => {
             </div>
             {isStudent() && (
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary">
+                <div className="font-display text-2xl font-bold text-primary">
                   {profile?.student_profile?.cgpa || 'N/A'}
                 </div>
                 <p className="text-sm text-muted-foreground">CGPA</p>

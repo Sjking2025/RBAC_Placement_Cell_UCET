@@ -5,7 +5,6 @@ import NotificationCenter from '../features/NotificationCenter';
 import { 
   Menu, 
   X, 
-  Bell, 
   User, 
   LogOut, 
   Settings,
@@ -16,7 +15,8 @@ import {
   CalendarDays,
   BarChart3,
   MessageSquare,
-  ChevronDown
+  ChevronDown,
+  GraduationCap
 } from 'lucide-react';
 import { cn, getInitials } from '../../utils/helpers';
 import { ROLE_LABELS } from '../../utils/constants';
@@ -49,17 +49,21 @@ const Navbar = () => {
   });
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+    <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/dashboard" className="flex items-center space-x-2">
-            <Briefcase className="h-8 w-8 text-primary" />
-            <span className="font-bold text-xl hidden sm:block">Placement Cell</span>
+          <Link to="/dashboard" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-glow-sm group-hover:shadow-glow-md transition-shadow duration-300">
+              <GraduationCap className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="font-display font-bold text-lg hidden sm:block gradient-text">
+              Placement Cell
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center gap-1">
             {filteredNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
@@ -69,21 +73,24 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative",
                     isActive 
-                      ? "bg-primary text-primary-foreground" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-primary/10 text-primary" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
                   <Icon className="h-4 w-4 mr-2" />
                   {item.label}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[2px] rounded-full bg-primary" />
+                  )}
                 </Link>
               );
             })}
           </div>
 
           {/* Right side */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-3">
             {/* Notifications */}
             <NotificationCenter />
 
@@ -91,69 +98,78 @@ const Navbar = () => {
             <div className="relative">
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted"
+                className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-muted/50 transition-all duration-200"
               >
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs font-bold ring-2 ring-primary/20">
                   {getInitials(user?.user_profile?.first_name, user?.user_profile?.last_name)}
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium">
+                  <p className="text-sm font-medium leading-tight">
                     {user?.user_profile?.first_name} {user?.user_profile?.last_name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] text-muted-foreground tracking-wide uppercase">
                     {ROLE_LABELS[user?.role]}
                   </p>
                 </div>
-                <ChevronDown className="h-4 w-4 hidden md:block" />
+                <ChevronDown className={cn(
+                  "h-3.5 w-3.5 hidden md:block text-muted-foreground transition-transform duration-200",
+                  isProfileOpen && "rotate-180"
+                )} />
               </button>
 
               {/* Dropdown Menu */}
               {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-popover rounded-md shadow-lg border animate-fade-in">
-                  <div className="p-2">
-                    <Link
-                      to="/profile"
-                      className="flex items-center px-3 py-2 rounded-md text-sm hover:bg-muted"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Profile
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="flex items-center px-3 py-2 rounded-md text-sm hover:bg-muted"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Settings
-                    </Link>
-                    <hr className="my-2" />
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center w-full px-3 py-2 rounded-md text-sm text-destructive hover:bg-destructive/10"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </button>
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsProfileOpen(false)} 
+                  />
+                  <div className="absolute right-0 mt-2 w-56 z-50 glass-card animate-scale-in origin-top-right">
+                    <div className="p-1.5">
+                      <Link
+                        to="/profile"
+                        className="flex items-center px-3 py-2.5 rounded-lg text-sm hover:bg-muted/50 transition-colors"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <User className="h-4 w-4 mr-2.5 text-muted-foreground" />
+                        Profile
+                      </Link>
+                      <Link
+                        to="/settings"
+                        className="flex items-center px-3 py-2.5 rounded-lg text-sm hover:bg-muted/50 transition-colors"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <Settings className="h-4 w-4 mr-2.5 text-muted-foreground" />
+                        Settings
+                      </Link>
+                      <div className="my-1.5 border-t border-border/50" />
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4 mr-2.5" />
+                        Logout
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
 
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 rounded-md hover:bg-muted"
+              className="lg:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors"
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="lg:hidden py-4 border-t animate-slide-in">
-            {filteredNavItems.map((item) => {
+          <div className="lg:hidden py-3 border-t border-border/50 space-y-0.5 animate-slide-in">
+            {filteredNavItems.map((item, idx) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               
@@ -162,11 +178,12 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    "flex items-center px-4 py-3 rounded-md text-sm font-medium",
+                    "flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 animate-stagger-in",
                     isActive 
-                      ? "bg-primary text-primary-foreground" 
-                      : "text-muted-foreground hover:bg-muted"
+                      ? "bg-primary/10 text-primary" 
+                      : "text-muted-foreground hover:bg-muted/50"
                   )}
+                  style={{ animationDelay: `${idx * 50}ms` }}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Icon className="h-5 w-5 mr-3" />

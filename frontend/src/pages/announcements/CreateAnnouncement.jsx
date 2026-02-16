@@ -130,7 +130,7 @@ const CreateAnnouncement = () => {
                   value={formData.content}
                   onChange={handleChange}
                   rows={6}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                  className="w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm resize-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   placeholder=" detailed description of the announcement..."
                   required
                 />
@@ -146,7 +146,7 @@ const CreateAnnouncement = () => {
                   name="type"
                   value={formData.type}
                   onChange={handleChange}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 >
                   <option value="general">General</option>
                   <option value="urgent">Urgent</option>
@@ -163,7 +163,7 @@ const CreateAnnouncement = () => {
                   name="priority"
                   value={formData.priority}
                   onChange={handleChange}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>

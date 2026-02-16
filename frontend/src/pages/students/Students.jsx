@@ -131,10 +131,10 @@ const Students = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-stagger-in">
         <div>
-          <h1 className="text-3xl font-bold">Students</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Students</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage and view student profiles
           </p>
         </div>
@@ -183,13 +183,13 @@ const Students = () => {
           </div>
 
           {showFilters && (
-            <div className="mt-4 pt-4 border-t">
+            <div className="mt-4 pt-4 border-t border-border/50">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {/* Year of Study Filter - New */}
                 <div>
                    <label className="text-sm font-medium mb-1 block">Year of Study</label>
                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-primary/50"
                       onChange={(e) => {
                           const year = parseInt(e.target.value);
                           if (year) {
@@ -217,7 +217,7 @@ const Students = () => {
                 <div>
                   <label className="text-sm font-medium mb-1 block">Department</label>
                   <select
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-primary/50"
                     value={searchParams.get('department') || ''}
                     onChange={(e) => handleFilterChange('department', e.target.value)}
                   >
@@ -233,7 +233,7 @@ const Students = () => {
                 <div>
                   <label className="text-sm font-medium mb-1 block">Batch Year (Direct)</label>
                   <select
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
                     value={searchParams.get('batch') || ''}
                      onChange={(e) => handleFilterChange('batch', e.target.value)}
                   >
@@ -284,11 +284,11 @@ const Students = () => {
         <div className="space-y-4">
           {students.map((student) => (
             <Link key={student.id} to={`/students/${student.id}`}>
-              <Card className="hover:border-primary/50 transition-colors">
-                <CardContent className="p-6">
+              <Card className="hover:border-primary/30 hover-lift transition-all duration-300">
+                <CardContent className="p-5">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     {/* Avatar */}
-                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm flex-shrink-0">
                       {getInitials(student.user?.user_profile?.first_name, student.user?.user_profile?.last_name)}
                     </div>
 

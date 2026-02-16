@@ -1,4 +1,5 @@
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { X } from "lucide-react"
 import { cn } from "../../utils/helpers"
 
@@ -38,17 +39,29 @@ const DialogTrigger = ({ asChild, children, onClick }) => {
 const DialogContent = ({ className, children, ...props }) => {
   const { open, onOpenChange } = React.useContext(DialogContext);
   
+  // Lock body scroll when dialog is open
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center sm:items-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div 
-        className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-all duration-100"
+        className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm transition-all duration-100"
         onClick={() => onOpenChange(false)}
       />
       <div 
         className={cn(
-            "fixed z-50 grid w-full gap-4 rounded-b-lg border bg-background p-6 shadow-lg sm:max-w-lg sm:rounded-lg",
+            "relative z-[101] grid w-full gap-4 rounded-lg border bg-background p-6 shadow-lg max-h-[85vh] overflow-y-auto sm:max-w-lg",
             className
         )}
         {...props}
@@ -62,7 +75,8 @@ const DialogContent = ({ className, children, ...props }) => {
           <span className="sr-only">Close</span>
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

@@ -120,10 +120,10 @@ const Users = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-stagger-in">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">User Management</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage all system users
           </p>
         </div>
@@ -159,7 +159,7 @@ const Users = () => {
           </div>
 
           {showFilters && (
-            <div className="mt-4 pt-4 border-t grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Role</label>
                 <select
@@ -168,7 +168,7 @@ const Users = () => {
                     setRole(e.target.value);
                     handleFilterChange('role', e.target.value);
                   }}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 >
                   <option value="">All Roles</option>
                   <option value="admin">Admin</option>
@@ -185,7 +185,7 @@ const Users = () => {
                     setStatus(e.target.value);
                     handleFilterChange('status', e.target.value);
                   }}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 >
                   <option value="">All Status</option>
                   <option value="active">Active</option>
@@ -237,7 +237,7 @@ const Users = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-muted/50">
+                  <tr className="border-b border-border/50 bg-muted/30">
                     <th className="text-left p-4 font-medium">User</th>
                     <th className="text-left p-4 font-medium">Role</th>
                     <th className="text-left p-4 font-medium">Status</th>
@@ -247,10 +247,10 @@ const Users = () => {
                 </thead>
                 <tbody>
                   {users.map((user) => (
-                    <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <tr key={user.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-display font-bold text-sm">
                             {getInitials(user.user_profile?.first_name, user.user_profile?.last_name)}
                           </div>
                           <div>

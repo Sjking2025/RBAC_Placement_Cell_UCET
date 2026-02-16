@@ -128,7 +128,7 @@ const ScheduleInterview = () => {
                     name="jobId"
                     value={formData.jobId}
                     onChange={handleChange}
-                    className="w-full h-10 pl-9 rounded-md border border-input bg-background px-3 text-sm"
+                    className="w-full h-10 pl-9 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                     required
                   >
                     <option value="">Select a job</option>
@@ -290,7 +290,7 @@ const ScheduleInterview = () => {
                   name="interviewType"
                   value={formData.interviewType}
                   onChange={handleChange}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   required
                 >
                   <option value="technical">Technical</option>
@@ -308,7 +308,7 @@ const ScheduleInterview = () => {
                   name="interviewMode"
                   value={formData.interviewMode}
                   onChange={handleChange}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   required
                 >
                   <option value="online">Online</option>
@@ -408,7 +408,7 @@ const ScheduleInterview = () => {
                 value={formData.notes}
                 onChange={handleChange}
                 rows={3}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                className="w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm resize-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 placeholder="Share any specific instructions for the candidate..."
               />
             </div>

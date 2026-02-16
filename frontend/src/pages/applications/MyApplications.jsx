@@ -129,7 +129,7 @@ const MyApplications = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              className="h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
             >
               <option value="all">All Status</option>
               {Object.entries(STATUS_CONFIG).map(([value, { label }]) => (

@@ -71,10 +71,10 @@ const Interviews = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-stagger-in">
         <div>
-          <h1 className="text-3xl font-bold">Interviews</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Interviews</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {isStudent() ? 'View your scheduled interviews' : 'Manage interview schedules'}
           </p>
         </div>
@@ -119,8 +119,8 @@ const Interviews = () => {
       ) : Object.keys(groupedInterviews).length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">No interviews scheduled</h3>
+            <Calendar className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+            <h3 className="font-display text-base font-medium">No interviews scheduled</h3>
             <p className="text-muted-foreground">
               {view === 'upcoming' 
                 ? 'You have no upcoming interviews' 
@@ -135,7 +135,7 @@ const Interviews = () => {
               {/* Date Header */}
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">
+                <h3 className="font-display font-semibold text-sm">
                   {new Date(date).toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
@@ -149,11 +149,11 @@ const Interviews = () => {
               {/* Interviews for this date */}
               <div className="space-y-3">
                 {dateInterviews.map((interview) => (
-                  <Card key={interview.id}>
+                  <Card key={interview.id} className="hover-lift transition-all duration-300">
                     <CardContent className="p-4">
                       <div className="flex flex-col md:flex-row md:items-center gap-4">
                         {/* Time */}
-                        <div className="flex items-center gap-2 text-lg font-semibold w-24 flex-shrink-0">
+                        <div className="flex items-center gap-2 font-display text-base font-semibold w-24 flex-shrink-0">
                           <Clock className="h-5 w-5 text-muted-foreground" />
                           {interview.scheduled_time?.substring(0, 5) || '---'}
                         </div>

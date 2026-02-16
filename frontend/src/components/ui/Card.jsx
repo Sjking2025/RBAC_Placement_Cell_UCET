@@ -1,9 +1,12 @@
 import { cn } from '../../utils/helpers';
 
-const Card = ({ className, ...props }) => (
+const Card = ({ className, interactive, ...props }) => (
   <div
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      "rounded-xl border border-border/50 bg-card text-card-foreground transition-all duration-300",
+      "shadow-[0_1px_3px_hsl(220_20%_5%/0.04)]",
+      "hover:shadow-[0_4px_16px_hsl(220_20%_5%/0.08)]",
+      interactive && "cursor-pointer hover:-translate-y-1 active:translate-y-0",
       className
     )}
     {...props}
@@ -20,7 +23,7 @@ const CardHeader = ({ className, ...props }) => (
 const CardTitle = ({ className, ...props }) => (
   <h3
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
+      "font-display text-xl font-semibold leading-none tracking-tight",
       className
     )}
     {...props}
