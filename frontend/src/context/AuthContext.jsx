@@ -118,6 +118,57 @@ export const AuthProvider = ({ children }) => {
   // Check if user is student
   const isStudent = () => hasRole('student');
 
+  const googleLogin = async (idToken) => {
+    try {
+      const response = await authApi.googleLogin(idToken);
+      if (response.success) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        toast.success(response.message || 'Google sign-in successful!');
+        return { success: true, user: response.data.user, needsRole: response.data.needsRole };
+      } else {
+        toast.error(response.message || 'Google sign-in failed');
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Google sign-in failed';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const completeRegistration = async (data) => {
+    try {
+      const response = await authApi.completeRegistration(data);
+      if (response.success) {
+        setUser(response.data);
+        localStorage.setItem('user', JSON.stringify(response.data));
+        toast.success('Registration completed!');
+        return { success: true, user: response.data };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to complete registration';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const linkGoogle = async (idToken) => {
+    try {
+      const response = await authApi.linkGoogle(idToken);
+      if (response.success) {
+        toast.success('Google account linked successfully!');
+        return { success: true };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to link Google account';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -125,6 +176,9 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    googleLogin,
+    completeRegistration,
+    linkGoogle,
     updateUser,
     checkAuth,
     hasRole,

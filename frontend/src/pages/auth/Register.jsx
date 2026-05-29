@@ -3,13 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { signInWithPopup } from 'firebase/auth';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
-import { Eye, EyeOff, Briefcase } from 'lucide-react';
+import { Eye, EyeOff, Briefcase, Chrome } from 'lucide-react';
 import { USER_ROLES, DEGREE_TYPES, BATCH_YEARS } from '../../utils/constants';
+import { auth, googleProvider } from '../../config/firebase';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -35,8 +37,31 @@ const registerSchema = z.object({
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(1);
-  const { register: authRegister } = useAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const { register: authRegister, googleLogin } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleSignUp = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      const authResult = await googleLogin(idToken);
+      if (authResult.success) {
+        if (authResult.needsRole) {
+          navigate('/auth/complete-registration');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    } catch (error) {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error('Google sign-up error:', error);
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const {
     register,
@@ -87,6 +112,29 @@ const Register = () => {
             Register for the Placement Cell Portal
           </CardDescription>
         </CardHeader>
+
+        {/* Google Sign-Up */}
+        <CardContent className="pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-11 text-sm font-semibold"
+            onClick={handleGoogleSignUp}
+            loading={googleLoading}
+          >
+            <Chrome className="mr-2 h-4 w-4" />
+            Sign up with Google
+          </Button>
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border/50" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-3 text-muted-foreground">or register with email</span>
+            </div>
+          </div>
+        </CardContent>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">

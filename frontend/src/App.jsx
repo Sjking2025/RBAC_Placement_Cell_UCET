@@ -7,6 +7,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
+import CompleteRegistration from './pages/auth/CompleteRegistration';
 
 // Main Pages
 import Dashboard from './pages/Dashboard';
@@ -101,6 +102,12 @@ function App() {
             <ResetPassword />
           </PublicRoute>
         }
+      />
+
+      {/* Complete Registration (Google users without role) */}
+      <Route
+        path="/auth/complete-registration"
+        element={<CompleteRegistration />}
       />
 
       {/* Protected Routes */}

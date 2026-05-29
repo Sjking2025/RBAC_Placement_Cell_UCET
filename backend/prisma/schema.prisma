@@ -128,8 +128,10 @@ enum NotificationType {
 model User {
   id                 Int          @id @default(autoincrement())
   email              String       @unique @db.VarChar(255)
-  password_hash      String       @db.VarChar(255)
-  role               UserRole
+  password_hash      String?      @db.VarChar(255)
+  google_id          String?      @unique @db.VarChar(255)
+  auth_provider      String       @default("email") @db.VarChar(20)
+  role               UserRole?
   status             UserStatus   @default(active)
   created_at         DateTime     @default(now())
   updated_at         DateTime     @updatedAt

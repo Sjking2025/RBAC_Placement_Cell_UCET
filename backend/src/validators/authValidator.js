@@ -146,6 +146,72 @@ exports.resetPasswordSchema = Joi.object({
         })
 });
 
+// Google auth schema
+exports.googleAuthSchema = Joi.object({
+    idToken: Joi.string()
+        .required()
+        .messages({
+            'any.required': 'Google ID token is required'
+        })
+});
+
+// Complete registration schema (for Google first-time users)
+exports.completeRegistrationSchema = Joi.object({
+    role: Joi.string()
+        .valid('student', 'coordinator')
+        .required()
+        .messages({
+            'any.only': 'Role must be student or coordinator',
+            'any.required': 'Role is required'
+        }),
+
+    departmentId: Joi.number()
+        .integer()
+        .positive()
+        .optional(),
+
+    phone: Joi.string()
+        .optional(),
+
+    rollNumber: Joi.when('role', {
+        is: 'student',
+        then: Joi.string().required().messages({
+            'any.required': 'Roll number is required for students'
+        }),
+        otherwise: Joi.optional()
+    }),
+
+    degree: Joi.when('role', {
+        is: 'student',
+        then: Joi.string()
+            .valid('BTech', 'MTech', 'MBA', 'MCA', 'BSc', 'MSc', 'BBA', 'BCA')
+            .required()
+            .messages({
+                'any.required': 'Degree is required for students'
+            }),
+        otherwise: Joi.optional()
+    }),
+
+    batchYear: Joi.when('role', {
+        is: 'student',
+        then: Joi.number()
+            .integer()
+            .min(2000)
+            .max(2100)
+            .required()
+            .messages({
+                'any.required': 'Batch year is required for students'
+            }),
+        otherwise: Joi.optional()
+    }),
+
+    currentSemester: Joi.number()
+        .integer()
+        .min(1)
+        .max(10)
+        .optional()
+});
+
 // Update password schema
 exports.updatePasswordSchema = Joi.object({
     currentPassword: Joi.string()

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { signInWithPopup } from 'firebase/auth';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
@@ -20,10 +21,13 @@ import {
   Moon,
   Sun,
   Monitor,
-  Check
+  Check,
+  Chrome,
+  Link
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import { auth, googleProvider } from '../../config/firebase';
 
 const Settings = () => {
   const { user, isAdmin } = useAuth();
@@ -46,6 +50,25 @@ const Settings = () => {
     newPassword: '',
     confirmPassword: ''
   });
+
+  // Google account linking
+  const [linkingGoogle, setLinkingGoogle] = useState(false);
+  const { linkGoogle } = useAuth();
+
+  const handleLinkGoogle = async () => {
+    setLinkingGoogle(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      await linkGoogle(idToken);
+    } catch (error) {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        toast.error(error.response?.data?.message || 'Failed to link Google account');
+      }
+    } finally {
+      setLinkingGoogle(false);
+    }
+  };
 
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
@@ -299,50 +322,91 @@ const Settings = () => {
 
           {/* Security Tab */}
           {activeTab === 'security' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Security</CardTitle>
-                <CardDescription>Manage your password and security settings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePasswordChange} className="space-y-4">
-                  <div>
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      value={passwordData.currentPassword}
-                      onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      className="mt-1.5"
-                    />
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Security</CardTitle>
+                  <CardDescription>Manage your password and security settings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handlePasswordChange} className="space-y-4">
+                    <div>
+                      <Label htmlFor="currentPassword">Current Password</Label>
+                      <Input
+                        id="currentPassword"
+                        type="password"
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newPassword">New Password</Label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <Button type="submit" loading={saving}>
+                      <Key className="h-4 w-4 mr-2" />
+                      Update Password
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Linked Accounts */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Linked Accounts</CardTitle>
+                  <CardDescription>Connect your accounts for easier sign-in</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                        <Chrome className="h-5 w-5 text-red-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Google</p>
+                        <p className="text-sm text-muted-foreground">
+                          {user?.auth_provider === 'google'
+                            ? user.email
+                            : 'Not connected'}
+                        </p>
+                      </div>
+                    </div>
+                    {user?.auth_provider !== 'google' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleLinkGoogle}
+                        loading={linkingGoogle}
+                      >
+                        <Link className="h-4 w-4 mr-2" />
+                        Connect
+                      </Button>
+                    )}
+                    {user?.auth_provider === 'google' && (
+                      <Badge variant="success">Connected</Badge>
+                    )}
                   </div>
-                  <div>
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                      className="mt-1.5"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      className="mt-1.5"
-                    />
-                  </div>
-                  <Button type="submit" loading={saving}>
-                    <Key className="h-4 w-4 mr-2" />
-                    Update Password
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </>
           )}
 
           {/* System Tab (Admin Only) */}
