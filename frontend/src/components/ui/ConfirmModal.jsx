@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../../utils/helpers';
 
 const ConfirmModal = ({ 
@@ -20,16 +21,16 @@ const ConfirmModal = ({
     warning: 'bg-yellow-600 text-white hover:bg-yellow-700'
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div className="relative bg-background border rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
+      <div className="relative z-[101] bg-background border rounded-lg shadow-lg w-full max-w-md p-6">
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-muted-foreground mt-2">{message}</p>
         
@@ -53,7 +54,8 @@ const ConfirmModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

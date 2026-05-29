@@ -208,10 +208,12 @@ exports.scheduleInterview = async (req, res, next) => {
         });
 
         // Send notifications (asynchronously, don't block response)
-        Promise.all(applications.map(app => {
+        Promise.all(applications.map((app, index) => {
             const studentEmail = app.student.user.email;
             const studentName = app.student.user.user_profile?.first_name || 'Student';
-            return emailService.sendInterviewNotificationEmail(studentEmail, studentName, {
+
+            // Send Email
+            emailService.sendInterviewNotificationEmail(studentEmail, studentName, {
                 date: scheduledDate,
                 time: scheduledTime,
                 type: interviewType,
@@ -219,6 +221,13 @@ exports.scheduleInterview = async (req, res, next) => {
                 location,
                 meetingLink
             }).catch(err => console.error(`Failed to email ${studentEmail}:`, err));
+
+            // Send In-App Notification using the created interview object
+            // interview objects are in 'interviews' array, corresponding to 'applications' array order
+            if (interviews[index]) {
+                notificationService.notifyInterviewScheduled(interviews[index], app.student.user_id)
+                    .catch(err => console.error(`Failed to notify student ${app.student.id}:`, err));
+            }
         }));
 
         res.status(201).json({
@@ -314,7 +323,9 @@ exports.updateInterviewStatus = async (req, res, next) => {
             where: { id: interviewId },
             data: updateData,
             include: {
-                application: true
+                application: {
+                    include: { student: true }
+                }
             }
         });
 
@@ -329,6 +340,18 @@ exports.updateInterviewStatus = async (req, res, next) => {
                 where: { id: interview.application_id },
                 data: { status: 'rejected' }
             });
+        }
+
+        // Send notification about result
+        if (result && interview.application?.student?.user_id) {
+            const message = `Your interview result is out: ${result}. ${feedback ? `Feedback: ${feedback}` : ''}`;
+            notificationService.createNotification(
+                interview.application.student.user_id,
+                'interview_result',
+                'Interview Result Update',
+                message,
+                `/interviews` // Link to interviews page
+            ).catch(err => console.error('Failed to send interview result notification:', err));
         }
 
         res.status(200).json({

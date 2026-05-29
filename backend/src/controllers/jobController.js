@@ -1,5 +1,6 @@
 const prisma = require('../config/database');
 const { getPagination, formatPaginationResponse } = require('../utils/helpers');
+const notificationService = require('../services/notificationService');
 
 /**
  * @desc    Get all jobs (with filters)
@@ -194,6 +195,45 @@ exports.createJob = async (req, res, next) => {
             include: { company: true }
         });
 
+        // Send notifications if job is active
+        if (job.status === 'active') {
+            // Find eligible students
+            const where = {
+                user: { is_active: true }
+            };
+
+            if (eligibleDepartments && eligibleDepartments.length > 0) {
+                where.department_id = { in: eligibleDepartments.map(id => parseInt(id)) };
+            }
+
+            if (requiredCgpa) {
+                where.cgpa = { gte: parseFloat(requiredCgpa) };
+            }
+
+            if (allowedBacklogs !== undefined) {
+                where.active_backlogs = { lte: parseInt(allowedBacklogs) };
+            }
+
+            const formatDegrees = Array.isArray(eligibleDegrees) ? eligibleDegrees : [];
+            if (formatDegrees.length > 0) {
+                where.degree = { in: formatDegrees };
+            }
+
+            // Execute query efficiently selecting only User IDs
+            const eligibleStudents = await prisma.studentProfile.findMany({
+                where,
+                select: { user_id: true }
+            });
+
+            if (eligibleStudents.length > 0) {
+                const userIds = eligibleStudents.map(s => s.user_id);
+                // Send in background
+                notificationService.notifyNewJob(job, userIds).catch(err =>
+                    console.error('Failed to send new job notifications:', err)
+                );
+            }
+        }
+
         res.status(201).json({
             success: true,
             message: 'Job posting created successfully',
@@ -332,6 +372,43 @@ exports.updateJobStatus = async (req, res, next) => {
             },
             include: { company: true }
         });
+
+        // Send notifications if job became active
+        if (status === 'active') {
+            const { eligible_departments, required_cgpa, allowed_backlogs, eligible_degrees } = job;
+
+            const where = {
+                user: { is_active: true }
+            };
+
+            if (eligible_departments && eligible_departments.length > 0) {
+                where.department_id = { in: eligible_departments };
+            }
+
+            if (required_cgpa) {
+                where.cgpa = { gte: parseFloat(required_cgpa) };
+            }
+
+            if (allowed_backlogs !== null) {
+                where.active_backlogs = { lte: allowed_backlogs };
+            }
+
+            if (eligible_degrees && eligible_degrees.length > 0) {
+                where.degree = { in: eligible_degrees };
+            }
+
+            const eligibleStudents = await prisma.studentProfile.findMany({
+                where,
+                select: { user_id: true }
+            });
+
+            if (eligibleStudents.length > 0) {
+                const userIds = eligibleStudents.map(s => s.user_id);
+                notificationService.notifyNewJob(job, userIds).catch(err =>
+                    console.error('Failed to send new job notifications:', err)
+                );
+            }
+        }
 
         res.status(200).json({
             success: true,

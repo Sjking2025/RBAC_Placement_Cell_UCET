@@ -21,9 +21,8 @@ import {
 import { cn, getInitials } from '../../utils/helpers';
 import { ROLE_LABELS } from '../../utils/constants';
 
-const Navbar = () => {
+const Navbar = ({ onMobileMenuToggle }) => {
   const { user, logout, isAdmin, isOfficer, isStudent } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -158,41 +157,13 @@ const Navbar = () => {
 
             {/* Mobile menu button */}
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={onMobileMenuToggle}
               className="lg:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors"
             >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="lg:hidden py-3 border-t border-border/50 space-y-0.5 animate-slide-in">
-            {filteredNavItems.map((item, idx) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 animate-stagger-in",
-                    isActive 
-                      ? "bg-primary/10 text-primary" 
-                      : "text-muted-foreground hover:bg-muted/50"
-                  )}
-                  style={{ animationDelay: `${idx * 50}ms` }}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Icon className="h-5 w-5 mr-3" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        )}
       </div>
     </nav>
   );

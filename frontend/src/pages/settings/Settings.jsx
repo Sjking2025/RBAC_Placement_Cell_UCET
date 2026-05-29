@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -26,13 +27,9 @@ import api from '../../api/axios';
 
 const Settings = () => {
   const { user, isAdmin } = useAuth();
+  const { preference: theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('account');
   const [saving, setSaving] = useState(false);
-  
-  // Theme settings
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'system';
-  });
 
   // Notification settings
   const [notifications, setNotifications] = useState({
@@ -52,20 +49,6 @@ const Settings = () => {
 
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (newTheme === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else {
-      // System preference
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
     toast.success('Theme updated');
   };
 
@@ -143,20 +126,20 @@ const Settings = () => {
   );
 
   const NotificationToggle = ({ label, description, checked, onChange }) => (
-    <div className="flex items-center justify-between py-3">
-      <div>
+    <div className="flex items-center justify-between gap-4 py-3">
+      <div className="flex-1 min-w-0">
         <p className="font-medium">{label}</p>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       <button
         onClick={onChange}
-        className={`relative w-11 h-6 rounded-full transition-colors ${
+        className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${
           checked ? 'bg-primary' : 'bg-muted'
         }`}
       >
         <span 
-          className={`absolute w-5 h-5 bg-white rounded-full top-0.5 transition-transform ${
-            checked ? 'translate-x-5' : 'translate-x-0.5'
+          className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+            checked ? 'translate-x-5' : 'translate-x-0'
           }`}
         />
       </button>

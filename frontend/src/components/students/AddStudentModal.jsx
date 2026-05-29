@@ -189,7 +189,7 @@ const AddStudentModal = ({ departments, onSuccess, trigger, mode = 'add', initia
 
           <TabsContent value="manual" className="space-y-4 py-4">
             <form onSubmit={handleSubmit(onManualSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>First Name</Label>
                   <Input {...register('firstName')} placeholder="John" />
@@ -202,7 +202,7 @@ const AddStudentModal = ({ departments, onSuccess, trigger, mode = 'add', initia
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Email</Label>
                   <Input {...register('email')} type="email" placeholder="john@college.edu" />
@@ -215,7 +215,7 @@ const AddStudentModal = ({ departments, onSuccess, trigger, mode = 'add', initia
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Roll Number</Label>
                   <Input {...register('rollNumber')} placeholder="CSE001" />
@@ -234,7 +234,7 @@ const AddStudentModal = ({ departments, onSuccess, trigger, mode = 'add', initia
                 </div>
               </div>
 
-             <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>College Code</Label>
                   <Input {...register('collegeCode')} placeholder="4224" />
@@ -245,7 +245,7 @@ const AddStudentModal = ({ departments, onSuccess, trigger, mode = 'add', initia
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Department</Label>
                   <select 
@@ -273,7 +273,7 @@ const AddStudentModal = ({ departments, onSuccess, trigger, mode = 'add', initia
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div className="space-y-2">
                   <Label>Current Semester</Label>
                   <select 

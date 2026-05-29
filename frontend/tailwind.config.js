@@ -99,6 +99,10 @@ export default {
                     "0%, 100%": { boxShadow: "0 0 20px hsl(172 66% 50% / 0.1)" },
                     "50%": { boxShadow: "0 0 30px hsl(172 66% 50% / 0.25)" },
                 },
+                "slide-in-left": {
+                    from: { transform: "translateX(-100%)", opacity: 0 },
+                    to: { transform: "translateX(0)", opacity: 1 },
+                },
             },
             animation: {
                 "accordion-down": "accordion-down 0.2s ease-out",
@@ -109,6 +113,7 @@ export default {
                 "scale-in": "scale-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
                 "slide-in-right": "slide-in-right 0.4s cubic-bezier(0.22, 1, 0.36, 1) both",
                 "glow-pulse": "glow-pulse 3s ease-in-out infinite",
+                "slide-in-left": "slide-in-left 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
             },
         },
     },

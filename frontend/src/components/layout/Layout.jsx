@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
@@ -6,6 +7,7 @@ import { Loader2, GraduationCap } from 'lucide-react';
 
 const Layout = () => {
   const { loading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (loading) {
     return (
@@ -29,17 +31,20 @@ const Layout = () => {
       {/* Main layout */}
       <div className="relative flex min-h-screen">
         {/* Sidebar */}
-        <Sidebar />
+        <Sidebar 
+          isMobileOpen={mobileMenuOpen} 
+          onMobileClose={() => setMobileMenuOpen(false)} 
+        />
 
         {/* Content area */}
         <div className="flex-1 flex flex-col min-w-0">
-          <Navbar />
-          <main className="flex-1 container mx-auto px-4 sm:px-6 py-6">
+          <Navbar onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
+          <main className="flex-1 container mx-auto px-4 sm:px-6 py-4 sm:py-6">
             <div className="animate-fade-in">
               <Outlet />
             </div>
           </main>
-          <footer className="border-t border-border/50 py-5 mt-auto">
+          <footer className="border-t border-border/50 py-4 sm:py-5 mt-auto">
             <div className="container mx-auto px-4 text-center text-xs text-muted-foreground/60">
               <p>© {new Date().getFullYear()} Placement Cell Management System. Built with ❤️</p>
             </div>
@@ -51,3 +56,4 @@ const Layout = () => {
 };
 
 export default Layout;
+

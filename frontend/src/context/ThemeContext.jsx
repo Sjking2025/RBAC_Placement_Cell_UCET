@@ -1,36 +1,62 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const ThemeContext = createContext(null);
 
+/**
+ * Resolves the effective theme from a preference.
+ * 'system' → checks OS preference
+ * 'light' / 'dark' → used directly
+ */
+function resolveTheme(preference) {
+  if (preference === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return preference;
+}
+
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(() => {
-    // Check localStorage first
-    const saved = localStorage.getItem('theme');
-    if (saved) return saved;
-    
-    // Check system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    return 'light';
+  // User's chosen preference: 'light' | 'dark' | 'system'
+  const [preference, setPreference] = useState(() => {
+    return localStorage.getItem('theme') || 'system';
   });
 
-  useEffect(() => {
-    const root = window.document.documentElement;
+  // The actually applied theme: 'light' | 'dark'
+  const [resolvedTheme, setResolvedTheme] = useState(() => resolveTheme(preference));
+
+  // Apply theme to DOM
+  const applyTheme = useCallback((theme) => {
+    const root = document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    setResolvedTheme(theme);
+  }, []);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
+  // When preference changes, save and apply
+  useEffect(() => {
+    localStorage.setItem('theme', preference);
+    applyTheme(resolveTheme(preference));
+  }, [preference, applyTheme]);
+
+  // Listen for OS theme changes when preference is 'system'
+  useEffect(() => {
+    if (preference !== 'system') return;
+
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e) => applyTheme(e.matches ? 'dark' : 'light');
+
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [preference, applyTheme]);
+
+  const setTheme = useCallback((newPreference) => {
+    setPreference(newPreference);
+  }, []);
 
   const value = {
-    theme,
-    setTheme,
-    toggleTheme,
-    isDark: theme === 'dark',
+    theme: resolvedTheme,      // 'light' or 'dark' (what's actually applied)
+    preference,                // 'light', 'dark', or 'system' (user's choice)
+    setTheme,                  // set preference
+    isDark: resolvedTheme === 'dark',
   };
 
   return (

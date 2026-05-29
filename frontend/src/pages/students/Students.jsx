@@ -13,7 +13,7 @@ import { EmptyStateNoStudents } from '../../components/ui/EmptyState';
 import { Select } from '../../components/ui/Select';
 import { DeleteConfirmDialog } from '../../components/ui/ConfirmDialog';
 import AddStudentModal from '../../components/students/AddStudentModal';
-import { formatStatus, getInitials, cn } from '../../utils/helpers';
+import { formatStatus, getInitials, cn, getMediaUrl } from '../../utils/helpers';
 import { BATCH_YEARS } from '../../utils/constants';
 import toast from 'react-hot-toast';
 import { 
@@ -349,7 +349,7 @@ const Students = () => {
                           size="sm"
                           onClick={(e) => {
                             e.preventDefault();
-                            window.open(student.resume_url, '_blank');
+                            window.open(getMediaUrl(student.resume_url), '_blank');
                           }}
                         >
                           <FileText className="h-4 w-4 mr-1" />

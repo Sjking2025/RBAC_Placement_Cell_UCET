@@ -234,7 +234,61 @@ const Users = () => {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            {/* Mobile Card View */}
+            <div className="md:hidden divide-y divide-border/50">
+              {users.map((user) => (
+                <div key={user.id} className="p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-display font-bold text-sm flex-shrink-0">
+                      {getInitials(user.user_profile?.first_name, user.user_profile?.last_name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {user.user_profile?.first_name} {user.user_profile?.last_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground flex items-center truncate">
+                        <Mail className="h-3 w-3 mr-1 flex-shrink-0" />
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-2">
+                      <Badge variant={getRoleBadgeVariant(user.role)}>
+                        <Shield className="h-3 w-3 mr-1" />
+                        {formatStatus(user.role)}
+                      </Badge>
+                      <Badge variant={user.status === 'active' ? 'success' : 'secondary'}>
+                        {user.status === 'active' ? (
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                        ) : (
+                          <XCircle className="h-3 w-3 mr-1" />
+                        )}
+                        {formatStatus(user.status)}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleStatusToggle(user.id, user.status)}
+                        disabled={user.id === currentUser?.id}
+                      >
+                        {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                      </Button>
+                      <Link to={`/users/${user.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border/50 bg-muted/30">

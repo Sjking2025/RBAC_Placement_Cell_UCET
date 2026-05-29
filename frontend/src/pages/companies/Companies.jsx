@@ -99,7 +99,7 @@ const Companies = () => {
       {/* Search */}
       <Card>
         <CardContent className="p-4">
-          <form onSubmit={handleSearch} className="flex gap-2">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -122,14 +122,14 @@ const Companies = () => {
                 params.set('page', '1');
                 setSearchParams(params);
               }}
-              className="h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+              className="h-10 w-full sm:w-auto rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
               <option value="approved">Approved</option>
               <option value="pending">Pending</option>
             </select>
-            <Button type="submit">Search</Button>
+            <Button type="submit" className="w-full sm:w-auto">Search</Button>
           </form>
         </CardContent>
       </Card>
