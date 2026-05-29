@@ -21,5 +21,6 @@ router.post('/reset-password/:token', validate(resetPasswordSchema), authControl
 router.get('/me', protect, authController.getMe);
 router.post('/logout', protect, authController.logout);
 router.put('/update-password', protect, validate(updatePasswordSchema), authController.updatePassword);
+router.put('/profile', protect, authController.updateProfile);
 
 module.exports = router;

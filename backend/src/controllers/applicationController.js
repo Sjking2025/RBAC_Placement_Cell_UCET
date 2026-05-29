@@ -1,5 +1,6 @@
 const prisma = require('../config/database');
 const { getPagination, formatPaginationResponse } = require('../utils/helpers');
+const notificationService = require('../services/notificationService');
 
 /**
  * @desc    Get applications
@@ -159,7 +160,10 @@ exports.updateApplicationStatus = async (req, res, next) => {
             }
         });
 
-        // TODO: Send notification to student
+        // Send notification to student
+        notificationService.notifyApplicationUpdate(application, status).catch(err =>
+            console.error(`Failed to notify student ${application.student.id}:`, err)
+        );
 
         res.status(200).json({
             success: true,
@@ -241,6 +245,21 @@ exports.bulkUpdateStatus = async (req, res, next) => {
                 reviewed_by: req.user.id
             }
         });
+
+        // Fetch affected applications to send notifications
+        const affectedApplications = await prisma.application.findMany({
+            where: { id: { in: applicationIds } },
+            include: {
+                student: { include: { user: true } },
+                job: { include: { company: true } }
+            }
+        });
+
+        // Send notifications in background
+        Promise.all(affectedApplications.map(app =>
+            notificationService.notifyApplicationUpdate(app, status)
+                .catch(err => console.error(`Failed to notify student ${app.student.id}:`, err))
+        ));
 
         res.status(200).json({
             success: true,

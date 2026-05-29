@@ -178,7 +178,7 @@ const CreateCompany = () => {
                 <Label htmlFor="industry">Industry *</Label>
                 <select
                   id="industry"
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   {...register('industry')}
                 >
                   <option value="">Select industry</option>
@@ -202,7 +202,7 @@ const CreateCompany = () => {
               <textarea
                 id="description"
                 rows={4}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                className="w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm resize-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 placeholder="Brief description about the company..."
                 {...register('description')}
               />
@@ -217,7 +217,7 @@ const CreateCompany = () => {
                 <Label htmlFor="employeeCount">Employee Count</Label>
                 <select
                   id="employeeCount"
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   {...register('employeeCount')}
                 >
                   <option value="">Select size</option>

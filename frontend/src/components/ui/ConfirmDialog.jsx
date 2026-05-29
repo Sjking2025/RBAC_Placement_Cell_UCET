@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, Info, HelpCircle, Trash2, X } from 'lucide-react';
 import { Button } from './Button';
 
@@ -42,16 +43,16 @@ const ConfirmDialog = ({
   const config = variantConfig[variant];
   const IconComponent = config.icon;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Dialog */}
-      <div className="relative bg-background rounded-lg shadow-xl max-w-md w-full mx-4 p-6 animate-in fade-in zoom-in-95">
+      <div className="relative z-[101] bg-background rounded-lg shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95">
         <div className="flex items-start gap-4">
           <div className={`p-3 rounded-full ${config.iconBg}`}>
             <IconComponent className={`h-6 w-6 ${config.iconColor}`} />
@@ -81,7 +82,8 @@ const ConfirmDialog = ({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

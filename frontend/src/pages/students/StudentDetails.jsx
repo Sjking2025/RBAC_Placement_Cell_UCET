@@ -88,7 +88,7 @@ const StudentDetails = () => {
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar */}
             <div className="flex-shrink-0">
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold">
+              <div className="w-20 h-20 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground font-display text-2xl font-bold">
                 {getInitials(profile?.first_name, profile?.last_name)}
               </div>
             </div>
@@ -113,7 +113,7 @@ const StudentDetails = () => {
 
                 {/* CGPA */}
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <p className="text-3xl font-bold text-primary">{studentProfile.cgpa || 'N/A'}</p>
+                  <p className="font-display text-2xl font-bold text-primary">{studentProfile.cgpa || 'N/A'}</p>
                   <p className="text-sm text-muted-foreground">CGPA</p>
                 </div>
               </div>

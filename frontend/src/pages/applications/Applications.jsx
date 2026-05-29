@@ -68,9 +68,9 @@ const Applications = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">My Applications</h1>
-        <p className="text-muted-foreground">
+      <div className="animate-stagger-in">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold">My Applications</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Track the status of your job applications
         </p>
       </div>
@@ -97,7 +97,7 @@ const Applications = () => {
       ) : applications.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <FileText className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
             <h3 className="text-lg font-medium">No applications found</h3>
             <p className="text-muted-foreground mb-4">
               {filter === 'all' 

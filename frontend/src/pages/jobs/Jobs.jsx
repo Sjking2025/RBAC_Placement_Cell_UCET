@@ -102,10 +102,10 @@ const Jobs = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-stagger-in">
         <div>
-          <h1 className="text-3xl font-bold">Job Openings</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Job Openings</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Browse and apply to available positions
           </p>
         </div>
@@ -149,7 +149,7 @@ const Jobs = () => {
 
           {/* Filter Options */}
           {showFilters && (
-            <div className="mt-4 pt-4 border-t grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Job Type</label>
                 <select
@@ -158,7 +158,7 @@ const Jobs = () => {
                     setJobType(e.target.value);
                     handleFilterChange('type', e.target.value);
                   }}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 >
                   <option value="">All Types</option>
                   {JOB_TYPES.map(t => (
@@ -174,7 +174,7 @@ const Jobs = () => {
                     setStatus(e.target.value);
                     handleFilterChange('status', e.target.value);
                   }}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 >
                   <option value="">All Status</option>
                   {JOB_STATUS.map(s => (
@@ -223,13 +223,13 @@ const Jobs = () => {
             return (
               <Link key={job.id} to={`/jobs/${job.id}`}>
                 <Card className={cn(
-                  "hover:border-primary/50 transition-colors",
+                  "hover:border-primary/30 hover-lift transition-all duration-300",
                   deadlinePassed && "opacity-60"
                 )}>
-                  <CardContent className="p-6">
+                  <CardContent className="p-5">
                     <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                       {/* Company Logo */}
-                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                         {job.company?.logo_url ? (
                           <img 
                             src={job.company.logo_url} 
@@ -245,8 +245,8 @@ const Jobs = () => {
                       <div className="flex-1">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <h3 className="text-lg font-semibold">{job.title}</h3>
-                            <p className="text-muted-foreground">{job.company?.name}</p>
+                            <h3 className="font-display text-base font-semibold">{job.title}</h3>
+                            <p className="text-sm text-muted-foreground">{job.company?.name}</p>
                           </div>
                           <div className="flex gap-2 flex-shrink-0">
                             <Badge variant={job.status === 'active' ? 'success' : 'secondary'}>
@@ -294,7 +294,7 @@ const Jobs = () => {
                         )}
 
                         {/* Footer */}
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
                           <span className="text-sm text-muted-foreground flex items-center">
                             <Clock className="h-4 w-4 mr-1" />
                             Apply by {formatDate(job.application_deadline)}
@@ -324,7 +324,7 @@ const Jobs = () => {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm">
+          <span className="text-xs text-muted-foreground">
             Page {pagination.page} of {totalPages}
           </span>
           <Button

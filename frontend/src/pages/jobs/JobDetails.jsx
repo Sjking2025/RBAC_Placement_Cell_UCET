@@ -84,7 +84,7 @@ const JobDetails = () => {
   if (!job) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-xl font-semibold">Job not found</h2>
+        <h2 className="font-display text-xl font-semibold">Job not found</h2>
         <Link to="/jobs">
           <Button className="mt-4">Back to Jobs</Button>
         </Link>
@@ -106,10 +106,10 @@ const JobDetails = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Header Card */}
-          <Card>
-            <CardContent className="p-6">
+          <Card className="border-border/50">
+            <CardContent className="p-5">
               <div className="flex items-start gap-4">
-                <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                   {job.company?.logo_url ? (
                     <img 
                       src={job.company.logo_url} 
@@ -123,10 +123,10 @@ const JobDetails = () => {
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h1 className="text-2xl font-bold">{job.title}</h1>
+                      <h1 className="font-display text-xl font-bold">{job.title}</h1>
                       <Link 
                         to={`/companies/${job.company?.id}`}
-                        className="text-lg text-muted-foreground hover:text-primary"
+                        className="text-base text-muted-foreground hover:text-primary transition-colors"
                       >
                         {job.company?.name}
                       </Link>
@@ -138,7 +138,7 @@ const JobDetails = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 mt-4 text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-muted-foreground">
                     <span className="flex items-center">
                       <MapPin className="h-4 w-4 mr-1" />
                       {job.location}
@@ -223,8 +223,8 @@ const JobDetails = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Apply Card */}
-          <Card>
-            <CardContent className="p-6">
+          <Card className="border-border/50">
+            <CardContent className="p-5">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Salary</span>
@@ -246,7 +246,7 @@ const JobDetails = () => {
                   </span>
                 </div>
                 
-                <hr />
+                <hr className="border-border/50" />
 
                 {isStudent() && (
                   <>
@@ -278,7 +278,7 @@ const JobDetails = () => {
           {/* Eligibility Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Eligibility Criteria</CardTitle>
+              <CardTitle className="font-display text-base">Eligibility Criteria</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {job.required_cgpa && (
@@ -319,7 +319,7 @@ const JobDetails = () => {
           {/* Company Info */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">About {job.company?.name}</CardTitle>
+              <CardTitle className="font-display text-base">About {job.company?.name}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {job.company?.industry && (

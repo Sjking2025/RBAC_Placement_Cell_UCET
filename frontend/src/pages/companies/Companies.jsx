@@ -79,10 +79,10 @@ const Companies = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-stagger-in">
         <div>
-          <h1 className="text-3xl font-bold">Companies</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Companies</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Browse partner companies and their job openings
           </p>
         </div>
@@ -99,7 +99,7 @@ const Companies = () => {
       {/* Search */}
       <Card>
         <CardContent className="p-4">
-          <form onSubmit={handleSearch} className="flex gap-2">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -122,14 +122,14 @@ const Companies = () => {
                 params.set('page', '1');
                 setSearchParams(params);
               }}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              className="h-10 w-full sm:w-auto rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
               <option value="approved">Approved</option>
               <option value="pending">Pending</option>
             </select>
-            <Button type="submit">Search</Button>
+            <Button type="submit" className="w-full sm:w-auto">Search</Button>
           </form>
         </CardContent>
       </Card>
@@ -142,8 +142,8 @@ const Companies = () => {
       ) : companies.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">No companies found</h3>
+            <Building2 className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+            <h3 className="font-display text-base font-medium">No companies found</h3>
             <p className="text-muted-foreground">
               Try adjusting your search or filters
             </p>
@@ -153,10 +153,10 @@ const Companies = () => {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {companies.map((company) => (
             <Link key={company.id} to={`/companies/${company.id}`}>
-              <Card className="h-full hover:border-primary/50 transition-colors">
-                <CardContent className="p-6">
+              <Card className="h-full hover:border-primary/30 hover-lift transition-all duration-300">
+                <CardContent className="p-5">
                   <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                    <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                       {company.logo_url ? (
                         <img 
                           src={company.logo_url} 
@@ -168,8 +168,8 @@ const Companies = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{company.name}</h3>
-                      <p className="text-sm text-muted-foreground">{company.industry}</p>
+                      <h3 className="font-display font-semibold text-sm truncate">{company.name}</h3>
+                      <p className="text-xs text-muted-foreground">{company.industry}</p>
                     </div>
                   </div>
 
@@ -188,7 +188,7 @@ const Companies = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
                     <Badge variant={company.status === 'active' ? 'success' : 'secondary'}>
                       {formatStatus(company.status)}
                     </Badge>
@@ -215,7 +215,7 @@ const Companies = () => {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm">
+          <span className="text-xs text-muted-foreground">
             Page {pagination.page} of {totalPages}
           </span>
           <Button

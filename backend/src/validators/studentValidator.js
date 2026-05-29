@@ -132,6 +132,13 @@ exports.addProjectSchema = Joi.object({
 
     projectUrl: Joi.string()
         .uri()
+        .allow('')
+        .max(500)
+        .optional(),
+
+    githubUrl: Joi.string()
+        .uri()
+        .allow('')
         .max(500)
         .optional()
 });
@@ -162,6 +169,7 @@ exports.addCertificationSchema = Joi.object({
 
     credentialUrl: Joi.string()
         .uri()
+        .allow('')
         .max(500)
         .optional()
 });

@@ -239,7 +239,7 @@ const CreateJob = () => {
                     <Label htmlFor="job_type">Job Type *</Label>
                     <select
                       id="job_type"
-                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                      className="w-full h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                       {...register('job_type')}
                     >
                       {JOB_TYPES.map((type) => (
@@ -274,7 +274,7 @@ const CreateJob = () => {
                     id="description"
                     rows={6}
                     placeholder="Describe the job role, responsibilities, and what makes this opportunity exciting..."
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                    className="w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm resize-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                     {...register('description')}
                   />
                   {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
@@ -286,7 +286,7 @@ const CreateJob = () => {
                     id="requirements"
                     rows={4}
                     placeholder="List the required skills, qualifications, and experience..."
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                    className="w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm resize-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                     {...register('requirements')}
                   />
                 </div>
@@ -297,7 +297,7 @@ const CreateJob = () => {
                     id="responsibilities"
                     rows={4}
                     placeholder="List the main responsibilities of this role..."
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                    className="w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm resize-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                     {...register('responsibilities')}
                   />
                 </div>

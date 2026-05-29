@@ -386,4 +386,126 @@ exports.updatePassword = async (req, res, next) => {
     }
 };
 
+/**
+ * @desc    Update user profile
+ * @route   PUT /api/v1/auth/profile
+ * @access  Private
+ */
+exports.updateProfile = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const {
+            email, // Add email
+            firstName, lastName, phone, address, city, state, // User Profile fields
+            cgpa, tenthPercentage, twelfthPercentage, linkedinUrl, githubUrl, portfolioUrl // Student Profile fields
+        } = req.body;
+
+        // Update User Profile
+        const userProfileData = {};
+        if (firstName) userProfileData.first_name = firstName;
+        if (lastName) userProfileData.last_name = lastName;
+        if (phone) userProfileData.phone = phone;
+
+
+        // Handle Email Update
+        if (email && email !== req.user.email) {
+            // Check if email is taken
+            const emailExists = await prisma.user.findUnique({
+                where: { email }
+            });
+
+            if (emailExists) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email already in use'
+                });
+            }
+
+            await prisma.user.update({
+                where: { id: userId },
+                data: { email }
+            });
+        }
+
+        if (Object.keys(userProfileData).length > 0) {
+            await prisma.userProfile.upsert({
+                where: { user_id: userId },
+                update: userProfileData,
+                create: {
+                    user_id: userId,
+                    first_name: firstName || 'User',
+                    last_name: lastName || '',
+                    ...userProfileData
+                }
+            });
+        }
+
+        // Update Student Profile if user is a student
+        if (req.user.role === 'student') {
+            console.log('Update Student Profile Request:', { cgpa, tenthPercentage, twelfthPercentage });
+            const studentProfileData = {};
+            if (cgpa !== undefined && cgpa !== null && cgpa !== '') studentProfileData.cgpa = String(cgpa);
+            if (tenthPercentage !== undefined && tenthPercentage !== null && tenthPercentage !== '') studentProfileData.tenth_percentage = String(tenthPercentage);
+            if (twelfthPercentage !== undefined && twelfthPercentage !== null && twelfthPercentage !== '') studentProfileData.twelfth_percentage = String(twelfthPercentage);
+            if (linkedinUrl !== undefined) studentProfileData.linkedin_url = linkedinUrl;
+            if (githubUrl !== undefined) studentProfileData.github_url = githubUrl;
+            if (portfolioUrl !== undefined) studentProfileData.portfolio_url = portfolioUrl;
+            if (address !== undefined) studentProfileData.address = address;
+            if (city !== undefined) studentProfileData.city = city;
+            if (state !== undefined) studentProfileData.state = state;
+
+            if (Object.keys(studentProfileData).length > 0) {
+                // Check if student profile exists
+                const studentProfile = await prisma.studentProfile.findUnique({
+                    where: { user_id: userId }
+                });
+
+                if (studentProfile) {
+                    try {
+                        await prisma.studentProfile.update({
+                            where: { user_id: userId },
+                            data: studentProfileData
+                        });
+                    } catch (spError) {
+                        console.error('Student Profile Update Failed:', spError);
+                        // Do not throw, allow partial update? Or throw?
+                        // If student data fails, we should probably warn but proceed?
+                        // But user expects success.
+                        throw spError;
+                    }
+                } else {
+                    console.log('Student Profile not found for user:', userId);
+                }
+            }
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                user_profile: { include: { department: true } },
+                student_profile: {
+                    include: {
+                        department: true,
+                        skills: true,
+                        projects: true,
+                        certifications: true,
+                        internships: true
+                    }
+                }
+            }
+
+
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+            data: user
+        });
+    } catch (error) {
+        console.error('Update Profile Error:', error); // detailed logging
+        next(error);
+    }
+};
+
 module.exports = exports;

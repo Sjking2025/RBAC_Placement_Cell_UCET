@@ -40,32 +40,47 @@ const Analytics = () => {
     }
   };
 
-  const StatCard = ({ icon: Icon, label, value, subValue, color }) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-3xl font-bold mt-1">{value}</p>
-            {subValue && (
-              <p className="text-sm text-muted-foreground mt-1">{subValue}</p>
-            )}
+  const statCardColors = [
+    { bg: 'bg-primary/10', text: 'text-primary' },
+    { bg: 'bg-emerald-500/10', text: 'text-emerald-500' },
+    { bg: 'bg-violet-500/10', text: 'text-violet-500' },
+    { bg: 'bg-amber-500/10', text: 'text-amber-500' },
+    { bg: 'bg-indigo-500/10', text: 'text-indigo-500' },
+    { bg: 'bg-orange-500/10', text: 'text-orange-500' },
+    { bg: 'bg-pink-500/10', text: 'text-pink-500' },
+    { bg: 'bg-cyan-500/10', text: 'text-cyan-500' },
+  ];
+
+  let colorIdx = 0;
+  const StatCard = ({ icon: Icon, label, value, subValue, color }) => {
+    const colors = statCardColors[colorIdx++ % statCardColors.length];
+    return (
+      <Card className="hover-lift transition-all duration-300">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+              <p className="font-display text-2xl font-bold mt-2">{value}</p>
+              {subValue && (
+                <p className="text-xs text-muted-foreground mt-1">{subValue}</p>
+              )}
+            </div>
+            <div className={`p-3 rounded-xl ${colors.bg}`}>
+              <Icon className={`h-5 w-5 ${colors.text}`} />
+            </div>
           </div>
-          <div className={`p-3 rounded-full ${color}`}>
-            <Icon className="h-6 w-6" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Analytics & Reports</h1>
-            <p className="text-muted-foreground">Loading placement statistics...</p>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold">Analytics & Reports</h1>
+            <p className="text-sm text-muted-foreground mt-1">Loading placement statistics...</p>
           </div>
         </div>
         <SkeletonStats count={4} />
@@ -77,10 +92,10 @@ const Analytics = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-stagger-in">
         <div>
-          <h1 className="text-3xl font-bold">Analytics & Reports</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Analytics & Reports</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Placement statistics and performance metrics
           </p>
         </div>
@@ -88,7 +103,7 @@ const Analytics = () => {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            className="h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
           >
             <option value="current_year">Current Year</option>
             <option value="last_year">Last Year</option>
@@ -180,9 +195,9 @@ const Analytics = () => {
                     <span>{dept.name}</span>
                     <span>{dept.placed}/{dept.total} ({Math.round(dept.placed/dept.total*100)}%)</span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
+                  <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
                     <div 
-                      className="bg-primary h-2 rounded-full transition-all"
+                      className="bg-gradient-to-r from-primary to-primary/70 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${(dept.placed/dept.total)*100}%` }}
                     />
                   </div>
@@ -209,7 +224,7 @@ const Analytics = () => {
             <div className="space-y-4">
               {(stats?.topRecruiters || []).map((company, idx) => (
                 <div key={company.name} className="flex items-center gap-4">
-                  <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                  <span className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-display font-bold text-sm">
                     {idx + 1}
                   </span>
                   <div className="flex-1">
@@ -244,7 +259,7 @@ const Analytics = () => {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               {Object.entries(stats?.applicationStatusBreakdown || {}).map(([status, count]) => (
-                <div key={status} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <div key={status} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
                   <div className={`w-3 h-3 rounded-full ${
                     status === 'selected' ? 'bg-green-500' :
                     status === 'rejected' ? 'bg-red-500' :
@@ -253,7 +268,7 @@ const Analytics = () => {
                   }`} />
                   <div>
                     <p className="text-sm font-medium">{formatStatus(status)}</p>
-                    <p className="text-2xl font-bold">{count}</p>
+                    <p className="font-display text-xl font-bold">{count}</p>
                   </div>
                 </div>
               ))}
@@ -282,9 +297,9 @@ const Analytics = () => {
                     <span>{range.label}</span>
                     <span>{range.count} students</span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
+                  <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
                     <div 
-                      className="bg-primary h-2 rounded-full transition-all"
+                      className="bg-gradient-to-r from-primary to-primary/70 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${(range.count / (stats?.placedStudents || 1)) * 100}%` }}
                     />
                   </div>

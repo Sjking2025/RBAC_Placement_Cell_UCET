@@ -69,16 +69,21 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-      <Card className="w-full max-w-lg">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated gradient mesh background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
+
+      <Card className="w-full max-w-lg relative z-10 glass-card border-border/50">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="p-3 rounded-full bg-primary/10">
-              <Briefcase className="h-8 w-8 text-primary" />
+            <div className="p-3 rounded-xl gradient-primary animate-glow-pulse">
+              <Briefcase className="h-7 w-7 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>
+          <CardTitle className="font-display text-2xl">Create Account</CardTitle>
+          <CardDescription className="text-sm">
             Register for the Placement Cell Portal
           </CardDescription>
         </CardHeader>
@@ -91,7 +96,7 @@ const Register = () => {
                 <div className="space-y-2">
                   <Label>Register as</Label>
                   <div className="grid grid-cols-2 gap-4">
-                    <label className={`flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-colors ${selectedRole === 'student' ? 'border-primary bg-primary/5' : 'hover:bg-muted'}`}>
+                    <label className={`flex items-center justify-center p-4 border rounded-xl cursor-pointer transition-all duration-200 ${selectedRole === 'student' ? 'border-primary bg-primary/5 shadow-glow-teal' : 'border-border/50 hover:border-primary/30'}`}>
                       <input
                         type="radio"
                         value="student"
@@ -103,7 +108,7 @@ const Register = () => {
                         <span className="text-xs text-muted-foreground">Apply for jobs</span>
                       </div>
                     </label>
-                    <label className={`flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-colors ${selectedRole === 'coordinator' ? 'border-primary bg-primary/5' : 'hover:bg-muted'}`}>
+                    <label className={`flex items-center justify-center p-4 border rounded-xl cursor-pointer transition-all duration-200 ${selectedRole === 'coordinator' ? 'border-primary bg-primary/5 shadow-glow-teal' : 'border-border/50 hover:border-primary/30'}`}>
                       <input
                         type="radio"
                         value="coordinator"
@@ -199,7 +204,7 @@ const Register = () => {
                         <Label htmlFor="degree">Degree</Label>
                         <select
                           id="degree"
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          className="flex h-10 w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                           {...register('degree')}
                         >
                           {DEGREE_TYPES.map(d => (
@@ -211,7 +216,7 @@ const Register = () => {
                         <Label htmlFor="batchYear">Batch Year</Label>
                         <select
                           id="batchYear"
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          className="flex h-10 w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                           {...register('batchYear', { valueAsNumber: true })}
                         >
                           {BATCH_YEARS.map(year => (

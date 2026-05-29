@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -13,16 +14,19 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Plus
+  Plus,
+
 } from 'lucide-react';
 import { formatDate, formatStatus, cn } from '../../utils/helpers';
 import api from '../../api/axios';
 
 const Interviews = () => {
+  const navigate = useNavigate();
   const { isStudent, isCoordinator } = useAuth();
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('upcoming'); // upcoming, past, all
+  const [groupBy, setGroupBy] = useState('date'); // date, job
 
   useEffect(() => {
     loadInterviews();
@@ -31,10 +35,7 @@ const Interviews = () => {
   const loadInterviews = async () => {
     setLoading(true);
     try {
-      const params = {};
-      if (view === 'upcoming') {
-        params.date = new Date().toISOString().split('T')[0];
-      }
+      const params = { view };
       const response = await api.get('/interviews', { params });
       setInterviews(response.data.data || []);
     } catch (error) {
@@ -59,28 +60,32 @@ const Interviews = () => {
     return mode === 'online' ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />;
   };
 
-  // Group interviews by date
+  // Group interviews
   const groupedInterviews = interviews.reduce((acc, interview) => {
-    const date = new Date(interview.scheduled_date).toDateString();
-    if (!acc[date]) {
-      acc[date] = [];
+    if (groupBy === 'date') {
+        const date = new Date(interview.scheduled_date).toDateString();
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(interview);
+    } else {
+        const key = `${interview.application?.job?.company?.name} - ${interview.application?.job?.title}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(interview);
     }
-    acc[date].push(interview);
     return acc;
   }, {});
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-stagger-in">
         <div>
-          <h1 className="text-3xl font-bold">Interviews</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Interviews</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {isStudent() ? 'View your scheduled interviews' : 'Manage interview schedules'}
           </p>
         </div>
         {isCoordinator() && (
-          <Button>
+          <Button onClick={() => navigate('/interviews/schedule')}>
             <Plus className="h-4 w-4 mr-2" />
             Schedule Interview
           </Button>
@@ -88,28 +93,54 @@ const Interviews = () => {
       </div>
 
       {/* View Toggle */}
-      <div className="flex gap-2">
-        <Button
-          variant={view === 'upcoming' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setView('upcoming')}
-        >
-          Upcoming
-        </Button>
-        <Button
-          variant={view === 'past' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setView('past')}
-        >
-          Past
-        </Button>
-        <Button
-          variant={view === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setView('all')}
-        >
-          All
-        </Button>
+
+
+      {/* View Options */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="flex gap-2">
+          <Button
+            variant={view === 'upcoming' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setView('upcoming')}
+          >
+            Upcoming
+          </Button>
+          <Button
+            variant={view === 'past' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setView('past')}
+          >
+            Past
+          </Button>
+          <Button
+            variant={view === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setView('all')}
+          >
+            All
+          </Button>
+        </div>
+
+        <div className="flex gap-2 bg-muted/30 p-1 rounded-lg">
+          <Button
+            variant={groupBy === 'date' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setGroupBy('date')}
+            className="text-xs"
+          >
+            <Calendar className="h-3 w-3 mr-2" />
+            By Date
+          </Button>
+          <Button
+            variant={groupBy === 'job' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setGroupBy('job')}
+            className="text-xs"
+          >
+            <Building2 className="h-3 w-3 mr-2" />
+            By Job
+          </Button>
+        </div>
       </div>
 
       {/* Interviews List */}
@@ -120,8 +151,8 @@ const Interviews = () => {
       ) : Object.keys(groupedInterviews).length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">No interviews scheduled</h3>
+            <Calendar className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+            <h3 className="font-display text-base font-medium">No interviews scheduled</h3>
             <p className="text-muted-foreground">
               {view === 'upcoming' 
                 ? 'You have no upcoming interviews' 
@@ -131,30 +162,37 @@ const Interviews = () => {
         </Card>
       ) : (
         <div className="space-y-6">
-          {Object.entries(groupedInterviews).map(([date, dateInterviews]) => (
-            <div key={date}>
-              {/* Date Header */}
-              <div className="flex items-center gap-2 mb-3">
-                <Calendar className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">
-                  {new Date(date).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
+          {Object.entries(groupedInterviews).map(([groupKey, groupInterviews]) => (
+            <div key={groupKey}>
+              {/* Group Header */}
+              <div className="flex items-center gap-2 mb-3 mt-6 first:mt-0">
+                {groupBy === 'date' ? (
+                    <Calendar className="h-5 w-5 text-primary" />
+                ) : (
+                    <Building2 className="h-5 w-5 text-primary" />
+                )}
+                <h3 className="font-display font-semibold text-sm">
+                  {groupBy === 'date' 
+                    ? new Date(groupKey).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })
+                    : groupKey
+                  }
                 </h3>
-                <Badge variant="secondary">{dateInterviews.length}</Badge>
+                <Badge variant="secondary">{groupInterviews.length}</Badge>
               </div>
 
-              {/* Interviews for this date */}
+              {/* Interviews for this group */}
               <div className="space-y-3">
-                {dateInterviews.map((interview) => (
-                  <Card key={interview.id}>
+                {groupInterviews.map((interview) => (
+                  <Card key={interview.id} className="hover-lift transition-all duration-300">
                     <CardContent className="p-4">
                       <div className="flex flex-col md:flex-row md:items-center gap-4">
                         {/* Time */}
-                        <div className="flex items-center gap-2 text-lg font-semibold w-24 flex-shrink-0">
+                        <div className="flex items-center gap-2 font-display text-base font-semibold w-24 flex-shrink-0">
                           <Clock className="h-5 w-5 text-muted-foreground" />
                           {interview.scheduled_time?.substring(0, 5) || '---'}
                         </div>

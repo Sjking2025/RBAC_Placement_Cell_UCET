@@ -29,6 +29,7 @@ enum UserStatus {
 
 enum DegreeType {
   BTech
+  BE
   MTech
   MBA
   MCA
@@ -207,11 +208,16 @@ model StudentProfile {
   active_backlogs     Int        @default(0)
   date_of_birth       DateTime?  @db.Date
   gender              String?    @db.VarChar(20)
+  college_code        String?    @db.VarChar(50)
+  college_name        String?    @db.VarChar(255)
   address             String?    @db.Text
   city                String?    @db.VarChar(100)
   state               String?    @db.VarChar(100)
   pincode             String?    @db.VarChar(10)
   resume_url          String?    @db.VarChar(500)
+  linkedin_url        String?    @db.VarChar(500)
+  github_url          String?    @db.VarChar(500)
+  portfolio_url       String?    @db.VarChar(500)
   profile_completed   Boolean    @default(false)
   placement_status    String     @default("active") @db.VarChar(50)
   created_at          DateTime   @default(now())
@@ -255,6 +261,7 @@ model StudentProject {
   start_date   DateTime? @db.Date
   end_date     DateTime? @db.Date
   project_url  String?   @db.VarChar(500)
+  github_url   String?   @db.VarChar(500)
   created_at   DateTime  @default(now())
 
   // Relations

@@ -28,7 +28,19 @@ exports.getInterviews = async (req, res, next) => {
 
         // Additional filters
         if (status) where.status = status;
-        if (date) where.scheduled_date = new Date(date);
+
+        if (req.query.view === 'upcoming') {
+            where.scheduled_date = {
+                gte: new Date(new Date().setHours(0, 0, 0, 0))
+            };
+        } else if (req.query.view === 'past') {
+            where.scheduled_date = {
+                lt: new Date(new Date().setHours(0, 0, 0, 0))
+            };
+        } else if (date) {
+            where.scheduled_date = new Date(date);
+        }
+
         if (applicationId) where.application_id = parseInt(applicationId);
 
         const [interviews, total] = await Promise.all([
@@ -139,9 +151,19 @@ exports.scheduleInterview = async (req, res, next) => {
             notes
         } = req.body;
 
-        // Check if application exists
-        const application = await prisma.application.findUnique({
-            where: { id: applicationId },
+        // Normalizing application IDs to an array
+        const applicationIds = Array.isArray(applicationId) ? applicationId : [applicationId];
+
+        if (applicationIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No applications selected'
+            });
+        }
+
+        // Validate all applications exist
+        const applications = await prisma.application.findMany({
+            where: { id: { in: applicationIds.map(id => parseInt(id)) } },
             include: {
                 student: {
                     include: { user: { select: { email: true, user_profile: true } } }
@@ -150,65 +172,68 @@ exports.scheduleInterview = async (req, res, next) => {
             }
         });
 
-        if (!application) {
+        if (applications.length !== applicationIds.length) {
             return res.status(404).json({
                 success: false,
-                message: 'Application not found'
+                message: 'One or more applications not found'
             });
         }
 
-        const interview = await prisma.interview.create({
-            data: {
-                application_id: applicationId,
-                interview_type: interviewType,
-                interview_mode: interviewMode,
-                scheduled_date: new Date(scheduledDate),
-                scheduled_time: new Date(`1970-01-01T${scheduledTime}`),
-                duration_minutes: durationMinutes || 60,
-                location,
-                meeting_link: meetingLink,
-                interviewer_names: interviewerNames,
-                notes,
-                status: 'scheduled',
-                created_by: req.user.id
-            },
-            include: {
-                application: {
-                    include: {
-                        job: { include: { company: true } },
-                        student: { include: { user: { select: { email: true, user_profile: true } } } }
+        // Create interviews in transaction
+        const interviews = await prisma.$transaction(
+            applications.map(app =>
+                prisma.interview.create({
+                    data: {
+                        application_id: app.id,
+                        interview_type: interviewType,
+                        interview_mode: interviewMode,
+                        scheduled_date: new Date(scheduledDate),
+                        scheduled_time: new Date(`1970-01-01T${scheduledTime}`),
+                        duration_minutes: durationMinutes || 60,
+                        location,
+                        meeting_link: meetingLink,
+                        interviewer_names: interviewerNames,
+                        notes,
+                        status: 'scheduled',
+                        created_by: req.user.id
                     }
-                }
-            }
-        });
+                })
+            )
+        );
 
-        // Update application status
-        await prisma.application.update({
-            where: { id: applicationId },
+        // Update application statuses
+        await prisma.application.updateMany({
+            where: { id: { in: applicationIds.map(id => parseInt(id)) } },
             data: { status: 'interview_scheduled' }
         });
 
-        // Send notification
-        const studentEmail = application.student.user.email;
-        const studentName = application.student.user.user_profile?.first_name || 'Student';
+        // Send notifications (asynchronously, don't block response)
+        Promise.all(applications.map((app, index) => {
+            const studentEmail = app.student.user.email;
+            const studentName = app.student.user.user_profile?.first_name || 'Student';
 
-        try {
-            await emailService.sendInterviewNotificationEmail(studentEmail, studentName, {
+            // Send Email
+            emailService.sendInterviewNotificationEmail(studentEmail, studentName, {
                 date: scheduledDate,
                 time: scheduledTime,
                 type: interviewType,
                 mode: interviewMode,
                 location,
                 meetingLink
-            });
-        } catch (emailError) {
-            console.error('Failed to send interview notification email:', emailError);
-        }
+            }).catch(err => console.error(`Failed to email ${studentEmail}:`, err));
+
+            // Send In-App Notification using the created interview object
+            // interview objects are in 'interviews' array, corresponding to 'applications' array order
+            if (interviews[index]) {
+                notificationService.notifyInterviewScheduled(interviews[index], app.student.user_id)
+                    .catch(err => console.error(`Failed to notify student ${app.student.id}:`, err));
+            }
+        }));
 
         res.status(201).json({
             success: true,
-            message: 'Interview scheduled successfully',
-            data: interview
+            message: `${interviews.length} interview(s) scheduled successfully`,
+            data: interviews
         });
     } catch (error) {
         next(error);
@@ -298,7 +323,9 @@ exports.updateInterviewStatus = async (req, res, next) => {
             where: { id: interviewId },
             data: updateData,
             include: {
-                application: true
+                application: {
+                    include: { student: true }
+                }
             }
         });
 
@@ -313,6 +340,18 @@ exports.updateInterviewStatus = async (req, res, next) => {
                 where: { id: interview.application_id },
                 data: { status: 'rejected' }
             });
+        }
+
+        // Send notification about result
+        if (result && interview.application?.student?.user_id) {
+            const message = `Your interview result is out: ${result}. ${feedback ? `Feedback: ${feedback}` : ''}`;
+            notificationService.createNotification(
+                interview.application.student.user_id,
+                'interview_result',
+                'Interview Result Update',
+                message,
+                `/interviews` // Link to interviews page
+            ).catch(err => console.error('Failed to send interview result notification:', err));
         }
 
         res.status(200).json({

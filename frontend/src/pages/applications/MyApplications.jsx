@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { formatDate, getRelativeTime } from '../../utils/helpers';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import Timeline from '../../components/ui/Timeline';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', icon: Clock, variant: 'warning' },
@@ -129,7 +130,7 @@ const MyApplications = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              className="h-10 rounded-lg border border-input bg-background/50 px-3 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
             >
               <option value="all">All Status</option>
               {Object.entries(STATUS_CONFIG).map(([value, { label }]) => (
@@ -246,31 +247,12 @@ const MyApplications = () => {
 
                     {/* Interview Info (if scheduled) */}
                     {application.interviews?.length > 0 && (
-                      <div className="p-4 bg-muted/30 rounded-lg">
-                        <h4 className="text-sm font-medium mb-2">Interview Details</h4>
-                        {application.interviews.map((interview) => (
-                          <div key={interview.id} className="text-sm space-y-1">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Date & Time</span>
-                              <span>{formatDate(interview.scheduled_at)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Mode</span>
-                              <span className="capitalize">{interview.interview_mode?.replace('_', ' ')}</span>
-                            </div>
-                            {interview.meeting_link && (
-                              <a
-                                href={interview.meeting_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-primary hover:underline"
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                                Join Meeting
-                              </a>
-                            )}
-                          </div>
-                        ))}
+                      <div className="mt-6 border-t pt-4">
+                        <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
+                           <Clock className="h-4 w-4" />
+                           Interview Timeline
+                        </h4>
+                        <Timeline items={application.interviews} />
                       </div>
                     )}
                   </div>

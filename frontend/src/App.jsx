@@ -24,7 +24,9 @@ import UserEdit from './pages/users/UserEdit';
 import Applications from './pages/applications/Applications';
 import MyApplications from './pages/applications/MyApplications';
 import Interviews from './pages/interviews/Interviews';
+import ScheduleInterview from './pages/interviews/ScheduleInterview';
 import Announcements from './pages/announcements/Announcements';
+import CreateAnnouncement from './pages/announcements/CreateAnnouncement';
 import Analytics from './pages/analytics/Analytics';
 import Profile from './pages/profile/Profile';
 import ProfileSetup from './pages/profile/ProfileSetup';
@@ -211,10 +213,28 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
+
         {/* Interviews */}
         <Route path="interviews" element={<Interviews />} />
+        <Route 
+          path="interviews/schedule" 
+          element={
+            <ProtectedRoute roles={['admin', 'dept_officer', 'coordinator']}>
+              <ScheduleInterview />
+            </ProtectedRoute>
+          } 
+        />
         
         {/* Announcements */}
+        <Route
+          path="announcements/new"
+          element={
+            <ProtectedRoute roles={['admin', 'dept_officer', 'coordinator']}>
+              <CreateAnnouncement />
+            </ProtectedRoute>
+          }
+        />
         <Route path="announcements" element={<Announcements />} />
         
         {/* Analytics - Admin/Officer */}
