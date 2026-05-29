@@ -120,6 +120,14 @@ exports.getApplication = async (req, res, next) => {
             });
         }
 
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer' && application.student.department_id !== req.user.user_profile?.department_id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to view this application'
+            });
+        }
+
         res.status(200).json({
             success: true,
             data: application
@@ -138,6 +146,27 @@ exports.updateApplicationStatus = async (req, res, next) => {
     try {
         const applicationId = parseInt(req.params.id);
         const { status, notes } = req.body;
+
+        // Fetch application for authorization check
+        const existingApp = await prisma.application.findUnique({
+            where: { id: applicationId },
+            include: { student: { select: { department_id: true } } }
+        });
+
+        if (!existingApp) {
+            return res.status(404).json({
+                success: false,
+                message: 'Application not found'
+            });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer' && existingApp.student.department_id !== req.user.user_profile?.department_id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to update this application'
+            });
+        }
 
         const updateData = {
             status,
@@ -236,8 +265,16 @@ exports.bulkUpdateStatus = async (req, res, next) => {
     try {
         const { applicationIds, status, notes } = req.body;
 
+        // Build where clause with department isolation for officers
+        const where = { id: { in: applicationIds } };
+        if (req.user.role === 'dept_officer' && req.user.user_profile?.department_id) {
+            where.student = {
+                department_id: req.user.user_profile.department_id
+            };
+        }
+
         const result = await prisma.application.updateMany({
-            where: { id: { in: applicationIds } },
+            where,
             data: {
                 status,
                 notes,
@@ -248,7 +285,7 @@ exports.bulkUpdateStatus = async (req, res, next) => {
 
         // Fetch affected applications to send notifications
         const affectedApplications = await prisma.application.findMany({
-            where: { id: { in: applicationIds } },
+            where,
             include: {
                 student: { include: { user: true } },
                 job: { include: { company: true } }

@@ -4,6 +4,22 @@ const prisma = require('../config/database');
 const emailService = require('../services/emailService');
 const logger = require('../utils/logger');
 
+async function verifyFirebaseToken(idToken) {
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${process.env.FIREBASE_WEB_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken })
+    }
+  );
+  const data = await response.json();
+  if (!response.ok || !data.users || data.users.length === 0) {
+    throw new Error(data.error?.message || 'Invalid Firebase token');
+  }
+  return data.users[0];
+}
+
 /**
  * Generate JWT token
  */
@@ -135,6 +151,14 @@ exports.login = async (req, res, next) => {
             });
         }
 
+        // Check if user registered via Google (no password set)
+        if (!user.password_hash) {
+            return res.status(401).json({
+                success: false,
+                message: 'This account uses Google Sign-In. Please sign in with Google.'
+            });
+        }
+
         // Check password
         const isMatch = await bcrypt.compare(password, user.password_hash);
 
@@ -172,6 +196,304 @@ exports.login = async (req, res, next) => {
                 token,
                 user: userWithoutPassword
             }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Google Sign-In / Sign-Up
+ * @route   POST /api/v1/auth/google
+ * @access  Public
+ */
+exports.googleAuth = async (req, res, next) => {
+    try {
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({
+                success: false,
+                message: 'Google ID token is required'
+            });
+        }
+
+        // Verify Firebase ID token
+        let firebaseUser;
+        try {
+            firebaseUser = await verifyFirebaseToken(idToken);
+        } catch (err) {
+            logger.error('Firebase token verification failed: ' + err.message);
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid Google token'
+            });
+        }
+
+        const googleId = firebaseUser.localId;
+        const email = firebaseUser.email;
+        const name = firebaseUser.displayName;
+        const picture = firebaseUser.photoUrl;
+        const email_verified = firebaseUser.emailVerified;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Google account must have an email address'
+            });
+        }
+
+        // Check if user exists by google_id or email
+        let user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { google_id: googleId },
+                    { email }
+                ]
+            },
+            include: {
+                user_profile: true,
+                student_profile: true
+            }
+        });
+
+        if (user) {
+            // Existing user — link Google account if not already linked
+            if (!user.google_id) {
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                        google_id: googleId,
+                        auth_provider: user.auth_provider === 'email' ? 'email' : user.auth_provider,
+                        email_verified: email_verified || user.email_verified
+                    },
+                    include: {
+                        user_profile: true,
+                        student_profile: true
+                    }
+                });
+            }
+
+            // Check if account is active
+            if (user.status !== 'active') {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Account is inactive or suspended'
+                });
+            }
+
+            // Update last login
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { last_login: new Date() }
+            });
+
+            // Generate token
+            const token = generateToken(user.id);
+
+            const { password_hash, reset_token, reset_token_expiry, verification_token, ...userWithoutPassword } = user;
+
+            return res.status(200).json({
+                success: true,
+                message: 'Google sign-in successful',
+                data: {
+                    token,
+                    user: userWithoutPassword,
+                    needsRole: !user.role
+                }
+            });
+        }
+
+        // New user — create account from Google profile
+        const nameParts = name ? name.split(' ') : ['Google', 'User'];
+        const firstName = nameParts[0] || 'Google';
+        const lastName = nameParts.slice(1).join(' ') || 'User';
+
+        const newUser = await prisma.$transaction(async (tx) => {
+            const created = await tx.user.create({
+                data: {
+                    email,
+                    google_id: googleId,
+                    auth_provider: 'google',
+                    email_verified: true,
+                    status: 'active'
+                }
+            });
+
+            await tx.userProfile.create({
+                data: {
+                    user_id: created.id,
+                    first_name: firstName,
+                    last_name: lastName,
+                    profile_picture: picture || null
+                }
+            });
+
+            return created;
+        });
+
+        // Generate token
+        const token = generateToken(newUser.id);
+
+        res.status(201).json({
+            success: true,
+            message: 'Google account created successfully',
+            data: {
+                token,
+                user: {
+                    id: newUser.id,
+                    email: newUser.email,
+                    role: null,
+                    auth_provider: 'google',
+                    user_profile: {
+                        first_name: firstName,
+                        last_name: lastName,
+                        profile_picture: picture || null
+                    }
+                },
+                needsRole: true
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Link Google account to existing user
+ * @route   POST /api/v1/auth/link-google
+ * @access  Private
+ */
+exports.linkGoogle = async (req, res, next) => {
+    try {
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({
+                success: false,
+                message: 'Google ID token is required'
+            });
+        }
+
+        // Verify Firebase ID token
+        let firebaseUser;
+        try {
+            firebaseUser = await verifyFirebaseToken(idToken);
+        } catch (err) {
+            logger.error('Firebase token verification failed (linkGoogle): ' + err.message);
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid Google token'
+            });
+        }
+
+        const googleId = firebaseUser.localId;
+        const email = firebaseUser.email;
+
+        // Check if Google ID is already linked to another user
+        const existingLink = await prisma.user.findUnique({
+            where: { google_id: googleId }
+        });
+
+        if (existingLink && existingLink.id !== req.user.id) {
+            return res.status(409).json({
+                success: false,
+                message: 'This Google account is already linked to another user'
+            });
+        }
+
+        // Link Google account to current user
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                google_id: googleId,
+                email_verified: true
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Google account linked successfully'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Complete registration for Google users (set role)
+ * @route   PUT /api/v1/auth/complete-registration
+ * @access  Private
+ */
+exports.completeRegistration = async (req, res, next) => {
+    try {
+        const { role, departmentId, rollNumber, degree, batchYear, currentSemester, phone } = req.body;
+        const userId = req.user.id;
+
+        if (!role || !['student', 'coordinator'].includes(role)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please select a valid role (student or coordinator)'
+            });
+        }
+
+        // Update user role
+        await prisma.user.update({
+            where: { id: userId },
+            data: { role }
+        });
+
+        // Update user profile
+        const profileData = {};
+        if (phone) profileData.phone = phone;
+        if (Object.keys(profileData).length > 0) {
+            await prisma.userProfile.update({
+                where: { user_id: userId },
+                data: profileData
+            });
+        }
+
+        // If student, create student profile
+        if (role === 'student') {
+            await prisma.studentProfile.upsert({
+                where: { user_id: userId },
+                update: {
+                    roll_number: rollNumber,
+                    degree: degree,
+                    department_id: departmentId || null,
+                    batch_year: batchYear,
+                    current_semester: currentSemester || 1
+                },
+                create: {
+                    user_id: userId,
+                    roll_number: rollNumber,
+                    degree: degree,
+                    department_id: departmentId || null,
+                    batch_year: batchYear,
+                    current_semester: currentSemester || 1
+                }
+            });
+        }
+
+        // Fetch updated user
+        const updatedUser = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                user_profile: { include: { department: true } },
+                student_profile: {
+                    include: {
+                        skills: true, projects: true, certifications: true, internships: true
+                    }
+                }
+            }
+        });
+
+        const { password_hash, reset_token, reset_token_expiry, verification_token, ...userWithoutPassword } = updatedUser;
+
+        res.status(200).json({
+            success: true,
+            message: 'Registration completed successfully',
+            data: userWithoutPassword
         });
     } catch (error) {
         next(error);
@@ -357,6 +679,14 @@ exports.updatePassword = async (req, res, next) => {
             where: { id: req.user.id }
         });
 
+        // Google users cannot change password
+        if (!user.password_hash) {
+            return res.status(400).json({
+                success: false,
+                message: 'Google Sign-In users cannot change password. Use Google account settings.'
+            });
+        }
+
         // Check current password
         const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
 
@@ -441,7 +771,7 @@ exports.updateProfile = async (req, res, next) => {
         }
 
         // Update Student Profile if user is a student
-        if (req.user.role === 'student') {
+        if (req.user.role === 'student' || (req.body.role === 'student' && !req.user.role)) {
             console.log('Update Student Profile Request:', { cgpa, tenthPercentage, twelfthPercentage });
             const studentProfileData = {};
             if (cgpa !== undefined && cgpa !== null && cgpa !== '') studentProfileData.cgpa = String(cgpa);

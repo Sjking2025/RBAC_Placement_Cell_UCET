@@ -25,7 +25,7 @@ router.post('/', authorize('admin', 'dept_officer'), studentController.createStu
 router.post('/bulk', authorize('admin', 'dept_officer'), studentController.bulkCreateStudents);
 
 // Get student by ID
-router.get('/:id', studentController.getStudent);
+router.get('/:id', authorize('admin', 'dept_officer', 'coordinator'), studentController.getStudent);
 
 // Update student profile
 router.put('/:id', validate(updateProfileSchema), studentController.updateStudent);
@@ -61,17 +61,17 @@ router.delete('/internships/:internshipId', studentController.deleteInternship);
 // ==========================================
 
 // Skills
-router.post('/:id/skills', validate(addSkillSchema), studentController.addSkill);
-router.delete('/:id/skills/:skillId', studentController.deleteSkill);
+router.post('/:id/skills', authorize('admin', 'dept_officer'), validate(addSkillSchema), studentController.addSkill);
+router.delete('/:id/skills/:skillId', authorize('admin', 'dept_officer'), studentController.deleteSkill);
 
 // Projects
-router.post('/:id/projects', validate(addProjectSchema), studentController.addProject);
+router.post('/:id/projects', authorize('admin', 'dept_officer'), validate(addProjectSchema), studentController.addProject);
 
 // Certifications
-router.post('/:id/certifications', validate(addCertificationSchema), studentController.addCertification);
+router.post('/:id/certifications', authorize('admin', 'dept_officer'), validate(addCertificationSchema), studentController.addCertification);
 
 // Internships
-router.post('/:id/internships', validate(addInternshipSchema), studentController.addInternship);
+router.post('/:id/internships', authorize('admin', 'dept_officer'), validate(addInternshipSchema), studentController.addInternship);
 
 // Resume upload for logged-in user
 router.post('/resume', uploadResume, async (req, res, next) => {
@@ -138,7 +138,7 @@ router.delete('/resume', async (req, res, next) => {
 });
 
 // Resume upload (Admin/Officer)
-router.post('/:id/resume', uploadResume, async (req, res, next) => {
+router.post('/:id/resume', authorize('admin', 'dept_officer'), uploadResume, async (req, res, next) => {
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
@@ -146,6 +146,20 @@ router.post('/:id/resume', uploadResume, async (req, res, next) => {
 
         const prisma = require('../config/database');
         const studentId = parseInt(req.params.id);
+
+        // Department isolation for officers
+        if (req.user.role !== 'admin') {
+            const student = await prisma.studentProfile.findUnique({
+                where: { id: studentId },
+                select: { department_id: true }
+            });
+            if (!student || student.department_id !== req.user.user_profile?.department_id) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized to upload resume for this student'
+                });
+            }
+        }
 
         const resumeUrl = `/uploads/resumes/${req.file.filename}`;
 

@@ -99,6 +99,14 @@ exports.getUser = async (req, res, next) => {
             });
         }
 
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer' && user.user_profile?.department_id !== req.user.user_profile?.department_id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to view users from other departments'
+            });
+        }
+
         res.status(200).json({
             success: true,
             data: sanitizeUser(user)
@@ -116,6 +124,28 @@ exports.getUser = async (req, res, next) => {
 exports.updateUser = async (req, res, next) => {
     try {
         const userId = parseInt(req.params.id);
+
+        // Fetch target user for department isolation check
+        const targetUser = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { user_profile: { select: { department_id: true } } }
+        });
+
+        if (!targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer' && targetUser.user_profile?.department_id !== req.user.user_profile?.department_id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to update users from other departments'
+            });
+        }
+
         const { status, role, firstName, lastName, phone, departmentId } = req.body;
 
         // Update user
@@ -133,7 +163,8 @@ exports.updateUser = async (req, res, next) => {
         if (firstName) profileData.first_name = firstName;
         if (lastName) profileData.last_name = lastName;
         if (phone) profileData.phone = phone;
-        if (departmentId) profileData.department_id = departmentId;
+        // Only admin can change department assignment
+        if (departmentId && req.user.role === 'admin') profileData.department_id = departmentId;
 
         if (Object.keys(profileData).length > 0) {
             await prisma.userProfile.update({

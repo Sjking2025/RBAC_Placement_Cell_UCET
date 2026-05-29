@@ -47,6 +47,24 @@ export const authApi = {
             newPassword
         });
         return response.data;
+    },
+
+    // Google Sign-In
+    googleLogin: async (idToken) => {
+        const response = await api.post('/auth/google', { idToken });
+        return response.data;
+    },
+
+    // Link Google account to existing user
+    linkGoogle: async (idToken) => {
+        const response = await api.post('/auth/link-google', { idToken });
+        return response.data;
+    },
+
+    // Complete registration for Google users (set role)
+    completeRegistration: async (data) => {
+        const response = await api.put('/auth/complete-registration', data);
+        return response.data;
     }
 };
 

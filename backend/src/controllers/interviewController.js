@@ -122,6 +122,22 @@ exports.getInterview = async (req, res, next) => {
             });
         }
 
+        // Check authorization
+        if (req.user.role === 'student' && interview.application.student.user_id !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to view this interview'
+            });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer' && interview.application.student.department_id !== req.user.user_profile?.department_id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to view this interview'
+            });
+        }
+
         res.status(200).json({
             success: true,
             data: interview
@@ -177,6 +193,18 @@ exports.scheduleInterview = async (req, res, next) => {
                 success: false,
                 message: 'One or more applications not found'
             });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const officerDeptId = req.user.user_profile?.department_id;
+            const unauthorized = applications.some(app => app.student.department_id !== officerDeptId);
+            if (unauthorized) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized to schedule interviews for students from other departments'
+                });
+            }
         }
 
         // Create interviews in transaction
@@ -249,6 +277,27 @@ exports.updateInterview = async (req, res, next) => {
     try {
         const interviewId = parseInt(req.params.id);
 
+        // Fetch interview for authorization check
+        const existingInterview = await prisma.interview.findUnique({
+            where: { id: interviewId },
+            include: { application: { include: { student: { select: { department_id: true } } } } }
+        });
+
+        if (!existingInterview) {
+            return res.status(404).json({
+                success: false,
+                message: 'Interview not found'
+            });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer' && existingInterview.application.student.department_id !== req.user.user_profile?.department_id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to update this interview'
+            });
+        }
+
         const updateData = {};
         const allowedFields = [
             'scheduled_date', 'scheduled_time', 'duration_minutes',
@@ -315,6 +364,27 @@ exports.updateInterviewStatus = async (req, res, next) => {
         const interviewId = parseInt(req.params.id);
         const { status, feedback, result } = req.body;
 
+        // Fetch interview for authorization check
+        const existingInterview = await prisma.interview.findUnique({
+            where: { id: interviewId },
+            include: { application: { include: { student: { select: { department_id: true } } } } }
+        });
+
+        if (!existingInterview) {
+            return res.status(404).json({
+                success: false,
+                message: 'Interview not found'
+            });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer' && existingInterview.application.student.department_id !== req.user.user_profile?.department_id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to update this interview status'
+            });
+        }
+
         const updateData = { status };
         if (feedback) updateData.feedback = feedback;
         if (result) updateData.result = result;
@@ -372,6 +442,27 @@ exports.updateInterviewStatus = async (req, res, next) => {
 exports.deleteInterview = async (req, res, next) => {
     try {
         const interviewId = parseInt(req.params.id);
+
+        // Fetch interview for authorization check
+        const existingInterview = await prisma.interview.findUnique({
+            where: { id: interviewId },
+            include: { application: { include: { student: { select: { department_id: true } } } } }
+        });
+
+        if (!existingInterview) {
+            return res.status(404).json({
+                success: false,
+                message: 'Interview not found'
+            });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer' && existingInterview.application.student.department_id !== req.user.user_profile?.department_id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to delete this interview'
+            });
+        }
 
         await prisma.interview.delete({
             where: { id: interviewId }

@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { signInWithPopup } from 'firebase/auth';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
-import { Eye, EyeOff, GraduationCap, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, GraduationCap, ArrowRight, Chrome } from 'lucide-react';
+import { auth, googleProvider } from '../../config/firebase';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -16,7 +18,8 @@ const loginSchema = z.object({
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -30,6 +33,28 @@ const Login = () => {
       password: ''
     }
   });
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      const authResult = await googleLogin(idToken);
+      if (authResult.success) {
+        if (authResult.needsRole) {
+          navigate('/auth/complete-registration');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    } catch (error) {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error('Google sign-in error:', error);
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const onSubmit = async (data) => {
     const result = await login(data.email, data.password);
@@ -68,6 +93,28 @@ const Login = () => {
             <p className="text-sm text-muted-foreground">
               Sign in to your Placement Cell account
             </p>
+          </div>
+
+          {/* Google Sign-In */}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-11 text-sm font-semibold mb-4"
+            onClick={handleGoogleSignIn}
+            loading={googleLoading}
+          >
+            <Chrome className="mr-2 h-4 w-4" />
+            Sign in with Google
+          </Button>
+
+          {/* Divider */}
+          <div className="relative mb-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border/50" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-3 text-muted-foreground">or continue with</span>
+            </div>
           </div>
 
           {/* Form */}

@@ -8,8 +8,9 @@ const analyticsService = require('../services/analyticsService');
 exports.getOverview = async (req, res, next) => {
     try {
         const { academicYear } = req.query;
+        const departmentId = req.user.role === 'dept_officer' ? req.user.user_profile?.department_id : null;
 
-        const stats = await analyticsService.getOverallStats(academicYear);
+        const stats = await analyticsService.getOverallStats(academicYear, departmentId);
 
         res.status(200).json({
             success: true,
@@ -29,8 +30,15 @@ exports.getAllDepartmentStats = async (req, res, next) => {
     try {
         const prisma = require('../config/database');
 
-        // Get all departments with their stats
+        // Department isolation for officers
+        const deptWhere = {};
+        if (req.user.role === 'dept_officer' && req.user.user_profile?.department_id) {
+            deptWhere.id = req.user.user_profile.department_id;
+        }
+
+        // Get departments with their stats
         const departments = await prisma.department.findMany({
+            where: deptWhere,
             include: {
                 student_profiles: {
                     select: {

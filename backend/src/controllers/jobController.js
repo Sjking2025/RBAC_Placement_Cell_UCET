@@ -512,6 +512,9 @@ exports.getJobApplications = async (req, res, next) => {
 
         const where = { job_id: jobId };
         if (status) where.status = status;
+        if (req.user.role === 'dept_officer' && req.user.user_profile?.department_id) {
+            where.student = { department_id: req.user.user_profile.department_id };
+        }
 
         const [applications, total] = await Promise.all([
             prisma.application.findMany({

@@ -39,9 +39,10 @@ module.exports = {
     fromEmail: process.env.FROM_EMAIL || 'noreply@placementcell.com',
     fromName: process.env.FROM_NAME || 'Placement Cell',
 
+    // Google Auth
+    googleClientId: process.env.GOOGLE_CLIENT_ID,
+
     // File Upload
-    maxFileSize: parseInt(process.env.MAX_FILE_SIZE) || 5242880,
-    allowedFileTypes: (process.env.ALLOWED_FILE_TYPES || 'pdf,doc,docx,jpg,jpeg,png').split(','),
 
     // AWS S3
     aws: {
