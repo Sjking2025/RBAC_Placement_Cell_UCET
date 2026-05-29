@@ -1,6 +1,7 @@
 const prisma = require('../config/database');
 const { getPagination, formatPaginationResponse } = require('../utils/helpers');
 const notificationService = require('../services/notificationService');
+const logger = require('../utils/logger');
 
 /**
  * @desc    Get all jobs (with filters)
@@ -229,7 +230,7 @@ exports.createJob = async (req, res, next) => {
                 const userIds = eligibleStudents.map(s => s.user_id);
                 // Send in background
                 notificationService.notifyNewJob(job, userIds).catch(err =>
-                    console.error('Failed to send new job notifications:', err)
+                    logger.error('Failed to send new job notifications:', err)
                 );
             }
         }
@@ -405,7 +406,7 @@ exports.updateJobStatus = async (req, res, next) => {
             if (eligibleStudents.length > 0) {
                 const userIds = eligibleStudents.map(s => s.user_id);
                 notificationService.notifyNewJob(job, userIds).catch(err =>
-                    console.error('Failed to send new job notifications:', err)
+                    logger.error('Failed to send new job notifications:', err)
                 );
             }
         }

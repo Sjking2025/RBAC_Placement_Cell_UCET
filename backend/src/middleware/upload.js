@@ -1,6 +1,15 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+
+const MIME_MAP = {
+    'application/pdf': 'pdf',
+    'application/msword': 'doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+    'image/jpeg': 'jpeg',
+    'image/png': 'png'
+};
 
 // Configure storage
 const storage = multer.diskStorage({
@@ -18,6 +27,10 @@ const storage = multer.diskStorage({
             uploadPath = 'uploads/attachments/';
         }
 
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+
         cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
@@ -26,15 +39,16 @@ const storage = multer.diskStorage({
     }
 });
 
-// File filter
+// File filter — validates both MIME type and extension
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = (process.env.ALLOWED_FILE_TYPES || 'pdf,doc,docx,jpg,jpeg,png').split(',');
+    const allowedExts = (process.env.ALLOWED_FILE_TYPES || 'pdf,doc,docx,jpg,jpeg,png').split(',');
     const ext = path.extname(file.originalname).toLowerCase().slice(1);
+    const mimeExt = MIME_MAP[file.mimetype];
 
-    if (allowedTypes.includes(ext)) {
+    if (mimeExt && allowedExts.includes(mimeExt) && allowedExts.includes(ext)) {
         cb(null, true);
     } else {
-        cb(new Error(`File type .${ext} is not allowed`), false);
+        cb(new Error(`File type .${ext} (${file.mimetype}) is not allowed`), false);
     }
 };
 

@@ -772,7 +772,7 @@ exports.updateProfile = async (req, res, next) => {
 
         // Update Student Profile if user is a student
         if (req.user.role === 'student' || (req.body.role === 'student' && !req.user.role)) {
-            console.log('Update Student Profile Request:', { cgpa, tenthPercentage, twelfthPercentage });
+            logger.debug('Update Student Profile Request:', { cgpa, tenthPercentage, twelfthPercentage });
             const studentProfileData = {};
             if (cgpa !== undefined && cgpa !== null && cgpa !== '') studentProfileData.cgpa = String(cgpa);
             if (tenthPercentage !== undefined && tenthPercentage !== null && tenthPercentage !== '') studentProfileData.tenth_percentage = String(tenthPercentage);
@@ -797,14 +797,14 @@ exports.updateProfile = async (req, res, next) => {
                             data: studentProfileData
                         });
                     } catch (spError) {
-                        console.error('Student Profile Update Failed:', spError);
+                        logger.error('Student Profile Update Failed:', spError);
                         // Do not throw, allow partial update? Or throw?
                         // If student data fails, we should probably warn but proceed?
                         // But user expects success.
                         throw spError;
                     }
                 } else {
-                    console.log('Student Profile not found for user:', userId);
+                    logger.warn('Student Profile not found for user:', userId);
                 }
             }
         }
@@ -833,7 +833,7 @@ exports.updateProfile = async (req, res, next) => {
             data: user
         });
     } catch (error) {
-        console.error('Update Profile Error:', error); // detailed logging
+        logger.error('Update Profile Error:', error);
         next(error);
     }
 };

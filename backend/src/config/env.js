@@ -1,4 +1,5 @@
 require('dotenv').config();
+const logger = require('../utils/logger');
 
 /**
  * Environment configuration validation
@@ -11,7 +12,7 @@ const requiredEnvVars = [
 // Validate required environment variables
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingVars.length > 0) {
-    console.error(`Missing required environment variables: ${missingVars.join(', ')}`);
+    logger.error(`Missing required environment variables: ${missingVars.join(', ')}`);
     process.exit(1);
 }
 

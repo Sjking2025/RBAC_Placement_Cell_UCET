@@ -46,9 +46,11 @@ app.use(cors({
 
         if (allowedOrigins.includes(origin)) {
             callback(null, true);
+        } else if (process.env.NODE_ENV === 'development') {
+            callback(null, true); // Allow all origins in development
         } else {
-            console.log('CORS blocked origin:', origin);
-            callback(null, true); // For development, allow all
+            logger.warn('CORS blocked origin:', origin);
+            callback(null, false); // Block in production
         }
     },
     credentials: true,

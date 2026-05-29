@@ -1,5 +1,6 @@
 const prisma = require('../config/database');
 const { getPagination, formatPaginationResponse } = require('../utils/helpers');
+const logger = require('../utils/logger');
 
 /**
  * @desc    Get all students
@@ -192,8 +193,8 @@ exports.updateStudent = async (req, res, next) => {
             }
         }
 
-        console.log(`Update Student ${studentId} by ${req.user.email} (${req.user.role})`);
-        console.log('Update Data:', req.body);
+        logger.info(`Update Student ${studentId} by ${req.user.email} (${req.user.role})`);
+        logger.debug('Update Data:', req.body);
         const updateData = {};
 
         // Fields allowed for students (Self-update)
@@ -939,7 +940,7 @@ exports.createStudent = async (req, res, next) => {
         }
 
         // Generate temp password (or use default)
-        const password = 'Password@123';
+        const password = process.env.DEFAULT_STUDENT_PASSWORD || 'Password@123';
         const bcrypt = require('bcryptjs');
         const passwordHash = await bcrypt.hash(password, 10);
 
@@ -1013,8 +1014,9 @@ exports.bulkCreateStudents = async (req, res, next) => {
             errors: []
         };
 
+        const defaultPassword = process.env.DEFAULT_STUDENT_PASSWORD || 'Password@123';
         const bcrypt = require('bcryptjs');
-        const passwordHash = await bcrypt.hash('Password@123', 10);
+        const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
         // Fetch all departments for mapping
         const allDepts = await prisma.department.findMany();

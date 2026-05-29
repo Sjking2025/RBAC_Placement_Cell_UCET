@@ -2,6 +2,7 @@ const prisma = require('../config/database');
 const { getPagination, formatPaginationResponse } = require('../utils/helpers');
 const emailService = require('../services/emailService');
 const notificationService = require('../services/notificationService');
+const logger = require('../utils/logger');
 
 /**
  * @desc    Get interviews
@@ -248,13 +249,13 @@ exports.scheduleInterview = async (req, res, next) => {
                 mode: interviewMode,
                 location,
                 meetingLink
-            }).catch(err => console.error(`Failed to email ${studentEmail}:`, err));
+            }).catch(err => logger.error(`Failed to email ${studentEmail}:`, err));
 
             // Send In-App Notification using the created interview object
             // interview objects are in 'interviews' array, corresponding to 'applications' array order
             if (interviews[index]) {
                 notificationService.notifyInterviewScheduled(interviews[index], app.student.user_id)
-                    .catch(err => console.error(`Failed to notify student ${app.student.id}:`, err));
+                    .catch(err => logger.error(`Failed to notify student ${app.student.id}:`, err));
             }
         }));
 
@@ -421,7 +422,7 @@ exports.updateInterviewStatus = async (req, res, next) => {
                 'Interview Result Update',
                 message,
                 `/interviews` // Link to interviews page
-            ).catch(err => console.error('Failed to send interview result notification:', err));
+            ).catch(err => logger.error('Failed to send interview result notification:', err));
         }
 
         res.status(200).json({
