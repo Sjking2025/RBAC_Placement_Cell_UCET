@@ -208,14 +208,9 @@ exports.googleAuth = async (req, res, next) => {
         // Verify Google ID token
         let ticket;
         try {
-            ticket = await googleClient.verifyIdToken({
-                idToken,
-                audience: [
-                    process.env.GOOGLE_CLIENT_ID,
-                    process.env.FIREBASE_PROJECT_NUMBER
-                ].filter(Boolean)
-            });
+            ticket = await googleClient.verifyIdToken({ idToken });
         } catch (err) {
+            logger.error('Google token verification failed:', err.message);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid Google token'
@@ -223,6 +218,18 @@ exports.googleAuth = async (req, res, next) => {
         }
 
         const payload = ticket.getPayload();
+        logger.info('Google auth payload', { iss: payload.iss, aud: payload.aud, azp: payload.azp });
+
+        // Verify the issuer for Firebase Auth tokens
+        const expectedIssuer = `https://securetoken.google.com/${process.env.FIREBASE_PROJECT_ID || 'placement-cell-ucet'}`;
+        if (payload.iss !== expectedIssuer) {
+            logger.error('Invalid token issuer:', { got: payload.iss, expected: expectedIssuer });
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid Google token'
+            });
+        }
+
         const { sub: googleId, email, name, picture, email_verified } = payload;
 
         if (!email) {
@@ -367,14 +374,9 @@ exports.linkGoogle = async (req, res, next) => {
         // Verify Google ID token
         let ticket;
         try {
-            ticket = await googleClient.verifyIdToken({
-                idToken,
-                audience: [
-                    process.env.GOOGLE_CLIENT_ID,
-                    process.env.FIREBASE_PROJECT_NUMBER
-                ].filter(Boolean)
-            });
+            ticket = await googleClient.verifyIdToken({ idToken });
         } catch (err) {
+            logger.error('Google token verification failed (linkGoogle):', err.message);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid Google token'
@@ -382,6 +384,18 @@ exports.linkGoogle = async (req, res, next) => {
         }
 
         const payload = ticket.getPayload();
+        logger.info('Google link auth payload', { iss: payload.iss, aud: payload.aud });
+
+        // Verify the issuer for Firebase Auth tokens
+        const expectedIssuer = `https://securetoken.google.com/${process.env.FIREBASE_PROJECT_ID || 'placement-cell-ucet'}`;
+        if (payload.iss !== expectedIssuer) {
+            logger.error('Invalid token issuer (linkGoogle):', { got: payload.iss, expected: expectedIssuer });
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid Google token'
+            });
+        }
+
         const { sub: googleId, email } = payload;
 
         // Check if Google ID is already linked to another user
