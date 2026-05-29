@@ -1,11 +1,24 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { OAuth2Client } = require('google-auth-library');
 const prisma = require('../config/database');
 const emailService = require('../services/emailService');
 const logger = require('../utils/logger');
 
-const googleClient = new OAuth2Client();
+async function verifyFirebaseToken(idToken) {
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${process.env.FIREBASE_WEB_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken })
+    }
+  );
+  const data = await response.json();
+  if (!response.ok || !data.users || data.users.length === 0) {
+    throw new Error(data.error?.message || 'Invalid Firebase token');
+  }
+  return data.users[0];
+}
 
 /**
  * Generate JWT token
@@ -205,32 +218,23 @@ exports.googleAuth = async (req, res, next) => {
             });
         }
 
-        // Verify Google ID token
-        let ticket;
+        // Verify Firebase ID token
+        let firebaseUser;
         try {
-            ticket = await googleClient.verifyIdToken({ idToken });
+            firebaseUser = await verifyFirebaseToken(idToken);
         } catch (err) {
-            logger.error('Google token verification failed:', err.message);
+            logger.error('Firebase token verification failed: ' + err.message);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid Google token'
             });
         }
 
-        const payload = ticket.getPayload();
-        logger.info('Google auth payload', { iss: payload.iss, aud: payload.aud, azp: payload.azp });
-
-        // Verify the issuer for Firebase Auth tokens
-        const expectedIssuer = `https://securetoken.google.com/${process.env.FIREBASE_PROJECT_ID || 'placement-cell-ucet'}`;
-        if (payload.iss !== expectedIssuer) {
-            logger.error('Invalid token issuer:', { got: payload.iss, expected: expectedIssuer });
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid Google token'
-            });
-        }
-
-        const { sub: googleId, email, name, picture, email_verified } = payload;
+        const googleId = firebaseUser.localId;
+        const email = firebaseUser.email;
+        const name = firebaseUser.displayName;
+        const picture = firebaseUser.photoUrl;
+        const email_verified = firebaseUser.emailVerified;
 
         if (!email) {
             return res.status(400).json({
@@ -371,32 +375,20 @@ exports.linkGoogle = async (req, res, next) => {
             });
         }
 
-        // Verify Google ID token
-        let ticket;
+        // Verify Firebase ID token
+        let firebaseUser;
         try {
-            ticket = await googleClient.verifyIdToken({ idToken });
+            firebaseUser = await verifyFirebaseToken(idToken);
         } catch (err) {
-            logger.error('Google token verification failed (linkGoogle):', err.message);
+            logger.error('Firebase token verification failed (linkGoogle): ' + err.message);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid Google token'
             });
         }
 
-        const payload = ticket.getPayload();
-        logger.info('Google link auth payload', { iss: payload.iss, aud: payload.aud });
-
-        // Verify the issuer for Firebase Auth tokens
-        const expectedIssuer = `https://securetoken.google.com/${process.env.FIREBASE_PROJECT_ID || 'placement-cell-ucet'}`;
-        if (payload.iss !== expectedIssuer) {
-            logger.error('Invalid token issuer (linkGoogle):', { got: payload.iss, expected: expectedIssuer });
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid Google token'
-            });
-        }
-
-        const { sub: googleId, email } = payload;
+        const googleId = firebaseUser.localId;
+        const email = firebaseUser.email;
 
         // Check if Google ID is already linked to another user
         const existingLink = await prisma.user.findUnique({
