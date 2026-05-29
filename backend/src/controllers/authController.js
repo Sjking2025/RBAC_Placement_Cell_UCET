@@ -5,7 +5,7 @@ const prisma = require('../config/database');
 const emailService = require('../services/emailService');
 const logger = require('../utils/logger');
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const googleClient = new OAuth2Client();
 
 /**
  * Generate JWT token
@@ -210,7 +210,10 @@ exports.googleAuth = async (req, res, next) => {
         try {
             ticket = await googleClient.verifyIdToken({
                 idToken,
-                audience: process.env.GOOGLE_CLIENT_ID
+                audience: [
+                    process.env.GOOGLE_CLIENT_ID,
+                    process.env.FIREBASE_PROJECT_NUMBER
+                ].filter(Boolean)
             });
         } catch (err) {
             return res.status(401).json({
@@ -366,7 +369,10 @@ exports.linkGoogle = async (req, res, next) => {
         try {
             ticket = await googleClient.verifyIdToken({
                 idToken,
-                audience: process.env.GOOGLE_CLIENT_ID
+                audience: [
+                    process.env.GOOGLE_CLIENT_ID,
+                    process.env.FIREBASE_PROJECT_NUMBER
+                ].filter(Boolean)
             });
         } catch (err) {
             return res.status(401).json({
