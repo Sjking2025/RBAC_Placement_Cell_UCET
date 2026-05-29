@@ -120,6 +120,10 @@ exports.createAnnouncement = async (req, res, next) => {
             expiresAt
         } = req.body;
 
+        // Restrict dept_officer to their own department
+        const officerDeptId = req.user.role === 'dept_officer' ? req.user.user_profile?.department_id : null;
+        const effectiveTargetDepartments = officerDeptId ? [officerDeptId] : (targetDepartments || []);
+
         const announcement = await prisma.announcement.create({
             data: {
                 title,
@@ -127,7 +131,7 @@ exports.createAnnouncement = async (req, res, next) => {
                 type: type || 'general',
                 priority: priority || 'medium',
                 target_roles: targetRoles || ['student', 'coordinator', 'dept_officer', 'admin'],
-                target_departments: targetDepartments || [],
+                target_departments: effectiveTargetDepartments,
                 target_batches: targetBatches || [],
                 attachment_url: attachmentUrl,
                 is_pinned: isPinned || false,
@@ -152,9 +156,9 @@ exports.createAnnouncement = async (req, res, next) => {
         if (targetRoles && targetRoles.length > 0) {
             targetUsersWhere.role = { in: targetRoles };
         }
-        if (targetDepartments && targetDepartments.length > 0) {
+        if (effectiveTargetDepartments.length > 0) {
             targetUsersWhere.user_profile = {
-                department_id: { in: targetDepartments }
+                department_id: { in: effectiveTargetDepartments }
             };
         }
 

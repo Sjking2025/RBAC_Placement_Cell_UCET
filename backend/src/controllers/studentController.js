@@ -73,6 +73,21 @@ const getStudentId = (req) => {
     return null;
 };
 
+// Helper to check department access for officers by student ID
+const checkStudentDeptAccess = async (userId, studentId) => {
+    if (!studentId) return false;
+    const student = await prisma.studentProfile.findUnique({
+        where: { id: studentId },
+        select: { department_id: true }
+    });
+    if (!student) return false;
+    const userProfile = await prisma.userProfile.findUnique({
+        where: { user_id: userId },
+        select: { department_id: true }
+    });
+    return userProfile?.department_id === student.department_id;
+};
+
 /**
  * @desc    Get single student
  * @route   GET /api/v1/students/:id
@@ -115,6 +130,16 @@ exports.getStudent = async (req, res, next) => {
                 success: false,
                 message: 'Student not found'
             });
+        }
+
+        // Department isolation for non-admins
+        if (req.user.role !== 'admin' && req.user.user_profile?.department_id) {
+            if (student.department_id !== req.user.user_profile.department_id) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized to view this student'
+                });
+            }
         }
 
         res.status(200).json({
@@ -367,6 +392,17 @@ exports.addSkill = async (req, res, next) => {
             });
         }
 
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized'
+                });
+            }
+        }
+
         const skill = await prisma.studentSkill.create({
             data: {
                 student_id: studentId,
@@ -396,7 +432,7 @@ exports.deleteSkill = async (req, res, next) => {
         if (!studentId) {
             return res.status(400).json({ success: false, message: 'Student ID not found' });
         }
-        const skillId = parseInt(req.params.skillId); // Wait, if called as /skills/:skillId, skillId is params.id? No.
+        const skillId = parseInt(req.params.skillId);
 
         // Check authorization
         if (req.user.role === 'student' && req.user.student_profile?.id !== studentId) {
@@ -404,6 +440,17 @@ exports.deleteSkill = async (req, res, next) => {
                 success: false,
                 message: 'Not authorized'
             });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized'
+                });
+            }
         }
 
         await prisma.studentSkill.delete({
@@ -436,6 +483,14 @@ exports.addProject = async (req, res, next) => {
         // Check authorization
         if (req.user.role === 'student' && req.user.student_profile?.id !== studentId) {
             return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
         }
 
         const { technologies } = req.body;
@@ -483,6 +538,14 @@ exports.updateProject = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Not authorized to update this project' });
         }
 
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
+        }
+
         const { technologies } = req.body;
         const techString = Array.isArray(technologies) ? technologies.join(', ') : technologies;
 
@@ -528,6 +591,14 @@ exports.deleteProject = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Not authorized to delete this project' });
         }
 
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
+        }
+
         await prisma.studentProject.delete({ where: { id: projectId } });
 
         res.status(200).json({
@@ -555,6 +626,14 @@ exports.addCertification = async (req, res, next) => {
 
         if (req.user.role === 'student' && req.user.student_profile?.id !== studentId) {
             return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
         }
 
         const certification = await prisma.studentCertification.create({
@@ -598,6 +677,14 @@ exports.updateCertification = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Not authorized' });
         }
 
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
+        }
+
         const updatedCert = await prisma.studentCertification.update({
             where: { id: certId },
             data: {
@@ -639,6 +726,14 @@ exports.deleteCertification = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Not authorized' });
         }
 
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
+        }
+
         await prisma.studentCertification.delete({ where: { id: certId } });
 
         res.status(200).json({
@@ -666,6 +761,14 @@ exports.addInternship = async (req, res, next) => {
 
         if (req.user.role === 'student' && req.user.student_profile?.id !== studentId) {
             return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
         }
 
         const internship = await prisma.studentInternship.create({
@@ -709,6 +812,14 @@ exports.updateInternship = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Not authorized' });
         }
 
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
+        }
+
         const updatedInternship = await prisma.studentInternship.update({
             where: { id: internshipId },
             data: {
@@ -748,6 +859,14 @@ exports.deleteInternship = async (req, res, next) => {
 
         if (internship.student_id !== studentId) {
             return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        // Department isolation for officers
+        if (req.user.role === 'dept_officer') {
+            const hasAccess = await checkStudentDeptAccess(req.user.id, studentId);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
         }
 
         await prisma.studentInternship.delete({ where: { id: internshipId } });

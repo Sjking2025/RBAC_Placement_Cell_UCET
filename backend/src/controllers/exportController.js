@@ -35,7 +35,12 @@ exports.exportStudents = async (req, res, next) => {
         const { departmentId, batchYear, placementStatus } = req.query;
 
         const where = {};
-        if (departmentId) where.department_id = parseInt(departmentId);
+        // Department isolation for officers — override any user-supplied departmentId
+        if (req.user.role === 'dept_officer' && req.user.user_profile?.department_id) {
+            where.department_id = req.user.user_profile.department_id;
+        } else if (departmentId) {
+            where.department_id = parseInt(departmentId);
+        }
         if (batchYear) where.batch_year = parseInt(batchYear);
         if (placementStatus) where.placement_status = placementStatus;
 
@@ -90,7 +95,10 @@ exports.exportPlacements = async (req, res, next) => {
         const { academicYear, departmentId } = req.query;
 
         const where = { offer_status: 'accepted' };
-        if (departmentId) {
+        // Department isolation for officers — override any user-supplied departmentId
+        if (req.user.role === 'dept_officer' && req.user.user_profile?.department_id) {
+            where.student = { department_id: req.user.user_profile.department_id };
+        } else if (departmentId) {
             where.student = { department_id: parseInt(departmentId) };
         }
 
@@ -182,8 +190,15 @@ exports.exportCompanies = async (req, res, next) => {
  */
 exports.exportAnalytics = async (req, res, next) => {
     try {
+        // Department isolation for officers
+        const deptWhere = {};
+        if (req.user.role === 'dept_officer' && req.user.user_profile?.department_id) {
+            deptWhere.id = req.user.user_profile.department_id;
+        }
+
         // Get department-wise stats
         const departments = await prisma.department.findMany({
+            where: deptWhere,
             include: {
                 student_profiles: true,
                 _count: {

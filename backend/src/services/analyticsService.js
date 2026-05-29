@@ -8,12 +8,22 @@ const logger = require('../utils/logger');
 /**
  * Get overall placement statistics
  */
-exports.getOverallStats = async (academicYear) => {
+exports.getOverallStats = async (academicYear, departmentId) => {
     try {
+        // Build department-scoped where clauses
+        const studentWhere = {};
+        const placementWhere = { offer_status: 'accepted' };
+        const appWhere = { status: 'submitted' };
+        if (departmentId) {
+            studentWhere.department_id = departmentId;
+            placementWhere.student = { department_id: departmentId };
+            appWhere.student = { department_id: departmentId };
+        }
+
         // Get real counts from database
-        const totalStudents = await prisma.studentProfile.count();
+        const totalStudents = await prisma.studentProfile.count({ where: studentWhere });
         const placedStudents = await prisma.studentProfile.count({
-            where: { placement_status: 'placed' }
+            where: { ...studentWhere, placement_status: 'placed' }
         });
         const totalCompanies = await prisma.company.count({
             where: { status: 'active' }
@@ -22,15 +32,15 @@ exports.getOverallStats = async (academicYear) => {
             where: { status: 'active' }
         });
         const pendingApplications = await prisma.application.count({
-            where: { status: 'submitted' }
+            where: appWhere
         });
         const totalOffers = await prisma.placementRecord.count({
-            where: { offer_status: 'accepted' }
+            where: placementWhere
         });
 
         // Get package stats
         const packageStats = await prisma.placementRecord.aggregate({
-            where: { offer_status: 'accepted' },
+            where: placementWhere,
             _avg: { package_lpa: true },
             _max: { package_lpa: true },
             _min: { package_lpa: true }
